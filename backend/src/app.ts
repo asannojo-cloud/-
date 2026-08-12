@@ -1,3 +1,10 @@
+// 반드시 express보다 먼저 import해야 한다.
+// Express 4는 async 라우트 핸들러 안에서 발생한 오류(reject된 Promise)를 자동으로
+// next(err)에 넘기지 않는데, Node는 처리되지 않은 Promise rejection이 있으면 기본적으로
+// 프로세스 전체를 종료시킨다. 이 때문에 DB 오류 등 흔한 상황에서 서버가 통째로 죽는
+// 문제가 있었다 (2026-08-12 Render 배포 중 발견) — 아래 patch로 async 오류가 항상
+// errorHandler 미들웨어로 전달되도록 한다.
+import "express-async-errors";
 import express from "express";
 import helmet from "helmet";
 import cors from "cors";
