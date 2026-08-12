@@ -45,8 +45,10 @@ membersRouter.get("/", async (req, res) => {
   const pageSize = Math.min(100, Math.max(1, parseInt(String(req.query.pageSize ?? "20"), 10) || 20));
   const query = typeof req.query.query === "string" ? req.query.query.trim() : undefined;
   const status = req.query.status === "active" || req.query.status === "inactive" ? req.query.status : undefined;
+  const hasPhoto =
+    req.query.hasPhoto === "true" ? true : req.query.hasPhoto === "false" ? false : undefined;
 
-  const result = await searchMembers({ query, status, page, pageSize });
+  const result = await searchMembers({ query, status, hasPhoto, page, pageSize });
   res.json({ items: result.rows, total: result.total, page, pageSize });
 });
 

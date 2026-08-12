@@ -3,6 +3,7 @@ import { pool } from "../../db/pool";
 export interface MemberSearchParams {
   query?: string;
   status?: "active" | "inactive";
+  hasPhoto?: boolean;
   page: number;
   pageSize: number;
 }
@@ -18,6 +19,11 @@ export async function searchMembers(params: MemberSearchParams) {
   if (params.status) {
     values.push(params.status);
     conditions.push(`status = $${values.length}`);
+  }
+  if (params.hasPhoto === true) {
+    conditions.push(`photo_path IS NOT NULL`);
+  } else if (params.hasPhoto === false) {
+    conditions.push(`photo_path IS NULL`);
   }
 
   const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";

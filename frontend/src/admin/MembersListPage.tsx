@@ -22,6 +22,7 @@ export default function MembersListPage() {
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<"" | "active" | "inactive">("");
+  const [hasPhoto, setHasPhoto] = useState<"" | "true" | "false">("");
   const [items, setItems] = useState<MemberRow[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -37,6 +38,7 @@ export default function MembersListPage() {
     const params = new URLSearchParams();
     if (query.trim()) params.set("query", query.trim());
     if (status) params.set("status", status);
+    if (hasPhoto) params.set("hasPhoto", hasPhoto);
     params.set("page", String(page));
     params.set("pageSize", String(pageSize));
     const data = await api.get<{ items: MemberRow[]; total: number }>(`/admin/members?${params}`);
@@ -49,7 +51,7 @@ export default function MembersListPage() {
   useEffect(() => {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, status]);
+  }, [page, status, hasPhoto]);
 
   // 입력할 때마다 자동으로 검색한다 (한글 입력기 조합 중 Enter가 "글자 확정"으로
   // 소비되어 검색이 트리거되지 않는 문제를 근본적으로 피하기 위함).
@@ -152,6 +154,30 @@ export default function MembersListPage() {
           <option value="active">정상</option>
           <option value="inactive">비활성</option>
         </select>
+        <label className="flex items-center gap-1.5 text-sm text-slate-600 whitespace-nowrap">
+          <input
+            type="checkbox"
+            checked={hasPhoto === "true"}
+            onChange={(e) => {
+              setHasPhoto(e.target.checked ? "true" : "");
+              setPage(1);
+            }}
+            className="rounded"
+          />
+          사진 있음
+        </label>
+        <label className="flex items-center gap-1.5 text-sm text-slate-600 whitespace-nowrap">
+          <input
+            type="checkbox"
+            checked={hasPhoto === "false"}
+            onChange={(e) => {
+              setHasPhoto(e.target.checked ? "false" : "");
+              setPage(1);
+            }}
+            className="rounded"
+          />
+          사진 없음
+        </label>
         <button
           onClick={() => {
             setPage(1);
