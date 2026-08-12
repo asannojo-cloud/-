@@ -171,6 +171,60 @@ export default function PhotoBatchUploadPage() {
     setResults([]);
   }
 
+  const [exporting, setExporting] = useState(false);
+  const [exportNotice, setExportNotice] = useState<string | null>(null);
+
+  // 매칭실패(동명이인 + 매칭안됨) 사진을 실제 파일로 폴더에 저장한다.
+  // File System Access API를 지원하는 브라우저(Chrome/Edge)에서만 동작한다 — 폴더 선택
+  // 화면과 동일한 브라우저 요구사항이라 이미 이 화면을 쓸 수 있다면 문제없이 쓸 수 있다.
+  async function handleExportUnmatched() {
+    const targets = matches.filter((m) => m.status === "ambiguous" || m.status === "no_match");
+    if (targets.length === 0) return;
+
+    const picker = (window as any).showDirectoryPicker;
+    if (typeof picker !== "function") {
+      setExportNotice("이 기능은 Chrome 또는 Edge 브라우저에서만 사용할 수 있습니다.");
+      setTimeout(() => setExportNotice(null), 5000);
+      return;
+    }
+
+    setExporting(true);
+    setExportNotice(null);
+    try {
+      const dirHandle = await picker();
+      const usedNames = new Set<string>();
+      for (const m of targets) {
+        let name = m.file.name;
+        // 같은 이름의 파일이 이미 폴더에 있으면 뒤에 번호를 붙여 덮어쓰지 않도록 한다.
+        if (usedNames.has(name)) {
+          const dot = name.lastIndexOf(".");
+          const base = dot > 0 ? name.slice(0, dot) : name;
+          const ext = dot > 0 ? name.slice(dot) : "";
+          let n = 2;
+          while (usedNames.has(`${base}(${n})${ext}`)) n++;
+          name = `${base}(${n})${ext}`;
+        }
+        usedNames.add(name);
+
+        const fileHandle = await dirHandle.getFileHandle(name, { create: true });
+        const writable = await fileHandle.createWritable();
+        await writable.write(m.file);
+        await writable.close();
+      }
+      setExportNotice(`매칭실패 사진 ${targets.length}장을 폴더에 저장했습니다.`);
+    } catch (e) {
+      // 사용자가 폴더 선택을 취소한 경우도 이 catch를 타는데, 그건 오류가 아니므로 조용히 넘어간다.
+      if (e instanceof DOMException && e.name === "AbortError") {
+        // 취소 — 아무 메시지도 띄우지 않는다.
+      } else {
+        setExportNotice("폴더에 저장하는 중 오류가 발생했습니다.");
+      }
+    } finally {
+      setExporting(false);
+      setTimeout(() => setExportNotice(null), 5000);
+    }
+  }
+
   function copyList(list: FileMatch[], label: string) {
     const text = list
       .map((m) => {
@@ -328,12 +382,24 @@ export default function PhotoBatchUploadPage() {
                   filter === "ambiguous" ? "동명이인 목록" : "매칭안됨 목록"
                 )
               }
-              className="mb-3 text-xs text-blue-600 underline"
+              className="mb-3 mr-4 text-xs text-blue-600 underline"
             >
               현재 목록 복사하기 (엑셀/메모장에 붙여넣기용)
             </button>
           )}
+          {ambiguousCount + noMatchCount > 0 && (
+            <button
+              onClick={handleExportUnmatched}
+              disabled={exporting}
+              className="mb-3 text-xs text-blue-600 underline disabled:opacity-50"
+            >
+              {exporting
+                ? "폴더에 저장 중..."
+                : `매칭실패 사진 ${ambiguousCount + noMatchCount}장 폴더로 저장하기`}
+            </button>
+          )}
           {copyNotice && <p className="mb-3 text-xs text-green-700">{copyNotice}</p>}
+          {exportNotice && <p className="mb-3 text-xs text-slate-600">{exportNotice}</p>}
 
           <div className="max-h-80 overflow-y-auto border border-slate-100 rounded-lg divide-y divide-slate-100 text-sm">
             {filteredMatches.length === 0 && <p className="px-3 py-4 text-slate-400 text-center">해당 항목이 없습니다.</p>}
