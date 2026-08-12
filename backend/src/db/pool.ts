@@ -7,6 +7,10 @@ types.setTypeParser(1082, (val: string) => val);
 
 export const pool = new Pool({
   connectionString: env.databaseUrl,
+  // Render 등 대부분의 매니지드 PostgreSQL은 SSL 연결을 요구한다.
+  // rejectUnauthorized:false는 Render가 자체 발급한 인증서 체인을 로컬에서 검증할 수 없기 때문
+  // (Render 공식 가이드에서 권장하는 설정) — 로컬 개발(NODE_ENV=development)에서는 비활성화.
+  ssl: env.isProduction ? { rejectUnauthorized: false } : undefined,
 });
 
 pool.on("error", (err) => {
