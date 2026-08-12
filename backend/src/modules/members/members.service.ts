@@ -29,6 +29,12 @@ export async function searchMembers(params: MemberSearchParams) {
   const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
   const offset = (params.page - 1) * params.pageSize;
 
+  // hasPhoto 조건은 바인딩 값 없이 리터럴(photo_path IS NULL 등)로만 들어가므로
+  // "조건 개수 == 바인딩 값 개수"가 더 이상 성립하지 않는다. 개수 대신 여기서 실제
+  // WHERE절에 쓰인 값의 개수를 스냅샷해서 count 쿼리에 정확히 그만큼만 넘긴다
+  // (안 그러면 플레이스홀더 수와 안 맞아 쿼리 자체가 오류난다, 2026-08-12 발견).
+  const whereValueCount = values.length;
+
   values.push(params.pageSize);
   const limitIdx = values.length;
   values.push(offset);
@@ -43,7 +49,7 @@ export async function searchMembers(params: MemberSearchParams) {
     values
   );
 
-  const countValues = values.slice(0, conditions.length);
+  const countValues = values.slice(0, whereValueCount);
   const { rows: countRows } = await pool.query(
     `SELECT COUNT(*)::int AS total FROM members ${where}`,
     countValues
