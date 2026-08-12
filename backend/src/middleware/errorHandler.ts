@@ -1,4 +1,6 @@
 import { Request, Response, NextFunction } from "express";
+import { MulterError } from "multer";
+import { env } from "../config/env";
 
 export class AppError extends Error {
   status: number;
@@ -12,6 +14,17 @@ export class AppError extends Error {
 export function errorHandler(err: unknown, req: Request, res: Response, next: NextFunction) {
   if (err instanceof AppError) {
     return res.status(err.status).json({ error: err.message });
+  }
+
+  // 사진/엑셀/ZIP 업로드가 용량 제한을 넘으면 multer가 던지는 오류.
+  // 그대로 두면 일반 500으로 처리되어 원인을 알 수 없으므로 사람이 읽을 수 있는 메시지로 바꾼다
+  // (2026-08-12 사진 일괄 업로드 중 대용량 사진이 "요청실패"로만 표시되는 문제 발견).
+  if (err instanceof MulterError) {
+    if (err.code === "LIMIT_FILE_SIZE") {
+      const mb = Math.round(env.maxPhotoSize / (1024 * 1024));
+      return res.status(413).json({ error: `사진 파일 용량이 너무 큽니다 (${mb}MB 이하만 업로드 가능합니다).` });
+    }
+    return res.status(400).json({ error: `파일 업로드 오류: ${err.message}` });
   }
 
   // express.json()이 잘못된 JSON 본문을 받으면 SyntaxError(status 400)를 던진다.

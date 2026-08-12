@@ -29,7 +29,9 @@ export const env = {
   uploadTmpDir: path.resolve(backendRoot, process.env.UPLOAD_TMP_DIR ?? "./tmp/uploads"),
   maxExcelSize: parseInt(process.env.MAX_EXCEL_SIZE ?? "10485760", 10),
   maxZipSize: parseInt(process.env.MAX_ZIP_SIZE ?? "209715200", 10),
-  maxPhotoSize: parseInt(process.env.MAX_PHOTO_SIZE ?? "5242880", 10),
+  // 스마트폰 카메라 사진은 5MB를 넘는 경우가 흔해서(2026-08-12 사진 일괄 업로드 중 확인)
+  // 기본값을 15MB로 올렸다. 어차피 서버에서 sharp로 정규화/압축 후 저장한다.
+  maxPhotoSize: parseInt(process.env.MAX_PHOTO_SIZE ?? "15728640", 10),
   // 운영 배포 시 백엔드가 프론트엔드 정적 빌드도 함께 서빙한다 (별도 서비스/CORS 불필요).
   frontendDistDir: path.resolve(backendRoot, "..", "frontend", "dist"),
 };

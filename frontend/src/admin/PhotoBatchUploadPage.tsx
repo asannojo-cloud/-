@@ -63,6 +63,7 @@ export default function PhotoBatchUploadPage() {
   const [skipExisting, setSkipExisting] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [currentBatchTotal, setCurrentBatchTotal] = useState(0);
   const [results, setResults] = useState<UploadResult[]>([]);
   const [error, setError] = useState<string | null>(null);
 
@@ -157,16 +158,20 @@ export default function PhotoBatchUploadPage() {
   const noMatchCount = matches.filter((m) => m.status === "no_match").length;
   const skippedCount = matches.filter((m) => m.status === "skipped_has_photo").length;
 
-  async function handleUpload() {
-    const targets = matches.filter((m) => m.status === "matched");
+  async function runUpload(targets: FileMatch[], previousResults: UploadResult[]) {
     if (targets.length === 0) return;
     setUploading(true);
     setUploadProgress(0);
-    setResults([]);
+    setCurrentBatchTotal(targets.length);
     setError(null);
 
+    // 재시도일 때는 이번에 다시 시도하는 항목의 이전 결과만 걷어내고, 나머지 결과는 그대로 유지한다.
+    const retryPaths = new Set(targets.map((t) => t.displayPath));
+    const kept = previousResults.filter((r) => !retryPaths.has(r.path));
+    const out: UploadResult[] = [...kept];
+    setResults(out);
+
     const CONCURRENCY = 3;
-    const out: UploadResult[] = [];
     let idx = 0;
 
     async function worker() {
@@ -185,13 +190,24 @@ export default function PhotoBatchUploadPage() {
             message: e instanceof ApiError ? e.message : "업로드 실패",
           });
         }
-        setUploadProgress(out.length);
+        setUploadProgress(out.length - kept.length);
         setResults([...out]);
       }
     }
 
     await Promise.all(Array.from({ length: Math.min(CONCURRENCY, targets.length) }, () => worker()));
     setUploading(false);
+  }
+
+  function handleUpload() {
+    const targets = matches.filter((m) => m.status === "matched");
+    void runUpload(targets, []);
+  }
+
+  function handleRetryFailed() {
+    const failedPaths = new Set(results.filter((r) => !r.ok).map((r) => r.path));
+    const targets = matches.filter((m) => failedPaths.has(m.displayPath));
+    void runUpload(targets, results);
   }
 
   const successCount = results.filter((r) => r.ok).length;
@@ -275,13 +291,23 @@ export default function PhotoBatchUploadPage() {
             ))}
           </div>
 
-          <button
-            onClick={handleUpload}
-            disabled={uploading || matchedCount === 0}
-            className="mt-4 px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg disabled:opacity-40"
-          >
-            {uploading ? `업로드 중... (${uploadProgress}/${matchedCount})` : `매칭된 ${matchedCount}건 업로드 시작`}
-          </button>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <button
+              onClick={handleUpload}
+              disabled={uploading || matchedCount === 0}
+              className="px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg disabled:opacity-40"
+            >
+              {uploading ? `업로드 중... (${uploadProgress}/${currentBatchTotal})` : `매칭된 ${matchedCount}건 업로드 시작`}
+            </button>
+            {!uploading && failCount > 0 && (
+              <button
+                onClick={handleRetryFailed}
+                className="px-4 py-2.5 bg-white border border-slate-300 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-50"
+              >
+                실패한 {failCount}건 재시도
+              </button>
+            )}
+          </div>
         </div>
       )}
 
