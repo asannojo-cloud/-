@@ -22,11 +22,12 @@ export function createApp() {
 
   app.set("trust proxy", 1);
   app.use(helmet());
-  // 프론트엔드를 같은 서버에서 함께 서빙하므로 대부분의 요청은 동일 출처(same-origin)라
-  // CORS 자체가 필요 없다. FRONTEND_ORIGIN이 실제로 설정된 경우(별도 프론트엔드 서비스를
-  // 운영하는 경우 등)에만 CORS를 켠다 — 빈 문자열을 그대로 넘기면 헤더 값 오류로 서버가
-  // 죽는 문제가 있었다 (2026-08-12 수정).
-  if (env.frontendOrigin) {
+  // 프론트엔드를 같은 서버에서 함께 서빙하므로 실제 요청은 전부 동일 출처(same-origin)이고
+  // CORS는 필요 없다. 운영 환경에서는 FRONTEND_ORIGIN 값(공백/따옴표 등 사소한 실수로도
+  // Access-Control-Allow-Origin 헤더 설정이 깨져 서버 전체가 죽는 사고가 있었다)에 아예
+  // 의존하지 않도록 운영 환경에서는 CORS 미들웨어 자체를 적용하지 않는다 (2026-08-12 수정).
+  // 로컬 개발(프론트 :5173 / 백엔드 :4000, 서로 다른 오리진)에서만 필요하므로 개발 환경에서만 켠다.
+  if (!env.isProduction) {
     app.use(
       cors({
         origin: env.frontendOrigin,
