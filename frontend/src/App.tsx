@@ -16,6 +16,7 @@ import MemberNewPage from "./admin/MemberNewPage";
 import ExcelUploadPage from "./admin/ExcelUploadPage";
 import ExcelHistoryPage from "./admin/ExcelHistoryPage";
 import AuditLogsPage from "./admin/AuditLogsPage";
+import PhotoBatchUploadPage from "./admin/PhotoBatchUploadPage";
 
 export default function App() {
   return (
@@ -52,6 +53,7 @@ export default function App() {
                 <Route path="members/:memberId" element={<MemberDetailPage />} />
                 <Route path="excel" element={<ExcelUploadPage />} />
                 <Route path="excel/history" element={<ExcelHistoryPage />} />
+                <Route path="photo-batch" element={<PhotoBatchUploadPage />} />
                 <Route path="audit-logs" element={<AuditLogsPage />} />
               </Route>
               <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
