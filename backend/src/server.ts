@@ -18,5 +18,5 @@ cleanupStaleUploadTmp();
 
 const app = createApp();
 app.listen(env.port, () => {
-  console.log(`[server] 아공노 모바일회원증 백엔드 실행 중 — http://localhost:${env.port}`);
+  console.log(`[server] 아공노 모바일조합원증 백엔드 실행 중 — http://localhost:${env.port}`);
 });

@@ -2,7 +2,7 @@ import { NavLink, Outlet, Navigate } from "react-router-dom";
 import { useMemberSessionContext } from "./MemberSessionContext";
 
 const tabs = [
-  { to: "/member/card", label: "회원증" },
+  { to: "/member/card", label: "조합원증" },
   { to: "/member/info", label: "내 정보" },
   { to: "/member/help", label: "안내" },
 ];

@@ -31,7 +31,7 @@ export default function MemberLoginPage() {
         <div className="text-center mb-8">
           <img src="/union-logo.png" alt="아산시공무원노동조합 로고" className="h-16 w-16 object-contain mx-auto mb-0.5" />
           <p className="text-slate-500 text-2xl">아산시공무원노동조합</p>
-          <h1 className="text-2xl font-bold text-slate-900 mt-4">모바일 회원증</h1>
+          <h1 className="text-2xl font-bold text-slate-900 mt-4">모바일 조합원증</h1>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4 bg-white rounded-2xl shadow-sm p-6">

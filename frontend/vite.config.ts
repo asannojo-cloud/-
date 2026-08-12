@@ -12,9 +12,9 @@ export default defineConfig({
       registerType: "autoUpdate",
       includeAssets: ["favicon.svg"],
       manifest: {
-        name: "아공노 모바일회원증",
-        short_name: "아공노 회원증",
-        description: "아산시공무원노동조합 모바일 회원증",
+        name: "아공노 모바일조합원증",
+        short_name: "아공노 조합원증",
+        description: "아산시공무원노동조합 모바일 조합원증",
         lang: "ko",
         start_url: "/member/card",
         scope: "/",

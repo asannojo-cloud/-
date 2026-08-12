@@ -21,7 +21,7 @@ export default function MemberInfoPage() {
       <div className="bg-white rounded-2xl shadow-sm divide-y divide-slate-100">
         <Row label="이름" value={member.name} />
         <Row label="생년월일" value={formatDate(member.birthDate)} />
-        <Row label="회원증 발급일" value={formatDate(member.issueDate)} />
+        <Row label="조합원증 발급일" value={formatDate(member.issueDate)} />
       </div>
 
       <p className="mt-4 text-xs text-slate-400 text-center">

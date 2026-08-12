@@ -70,7 +70,7 @@ export default function MemberNewPage() {
             </p>
           )}
           <p className="text-xs text-slate-500 bg-blue-50 border border-blue-100 rounded-lg p-3">
-            이 회원은 앞으로 모바일 회원증 로그인 화면에서 <strong>이름 + 휴대폰번호({phone})</strong>로 로그인할 수 있습니다.
+            이 회원은 앞으로 모바일 조합원증 로그인 화면에서 <strong>이름 + 휴대폰번호({phone})</strong>로 로그인할 수 있습니다.
           </p>
           <button
             onClick={() => navigate(`/admin/members/${memberId}`)}
