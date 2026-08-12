@@ -22,12 +22,18 @@ export function createApp() {
 
   app.set("trust proxy", 1);
   app.use(helmet());
-  app.use(
-    cors({
-      origin: env.frontendOrigin,
-      credentials: true,
-    })
-  );
+  // 프론트엔드를 같은 서버에서 함께 서빙하므로 대부분의 요청은 동일 출처(same-origin)라
+  // CORS 자체가 필요 없다. FRONTEND_ORIGIN이 실제로 설정된 경우(별도 프론트엔드 서비스를
+  // 운영하는 경우 등)에만 CORS를 켠다 — 빈 문자열을 그대로 넘기면 헤더 값 오류로 서버가
+  // 죽는 문제가 있었다 (2026-08-12 수정).
+  if (env.frontendOrigin) {
+    app.use(
+      cors({
+        origin: env.frontendOrigin,
+        credentials: true,
+      })
+    );
+  }
   app.use(express.json({ limit: "1mb" }));
 
   app.use(
