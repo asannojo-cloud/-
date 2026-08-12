@@ -1,4 +1,5 @@
 import { useState } from "react";
+import type { ReactNode } from "react";
 import { api, ApiError } from "../shared/api";
 
 interface MemberRow {
@@ -6,9 +7,16 @@ interface MemberRow {
   name: string;
   status: "active" | "inactive";
   has_photo: boolean;
+  phone: string | null;
 }
 
 type MatchStatus = "matched" | "ambiguous" | "no_match" | "skipped_has_photo";
+type FilterKey = "all" | MatchStatus;
+
+interface AmbiguousCandidate {
+  memberId: string;
+  phone: string | null;
+}
 
 interface FileMatch {
   file: File;
@@ -17,7 +25,13 @@ interface FileMatch {
   status: MatchStatus;
   memberId: string | null;
   matchedName: string | null;
-  candidates?: string[]; // 동명이인일 때 후보 회원번호 목록
+  candidates?: AmbiguousCandidate[]; // 동명이인일 때 후보 회원 목록 (구분용 전화번호 뒷자리 포함)
+}
+
+// 010-1234-5678 형태에서 뒷자리 4자리만 노출 (동명이인 구분용, 전체 번호는 굳이 안 보여줌)
+function maskPhone(phone: string | null): string {
+  if (!phone || phone.length < 4) return "번호없음";
+  return `...${phone.slice(-4)}`;
 }
 
 type UploadResult = { path: string; ok: boolean; message: string };
@@ -66,6 +80,8 @@ export default function PhotoBatchUploadPage() {
   const [currentBatchTotal, setCurrentBatchTotal] = useState(0);
   const [results, setResults] = useState<UploadResult[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [filter, setFilter] = useState<FilterKey>("all");
+  const [copyNotice, setCopyNotice] = useState<string | null>(null);
 
   async function ensureMembersLoaded(): Promise<MemberRow[]> {
     if (members) return members;
@@ -144,19 +160,39 @@ export default function PhotoBatchUploadPage() {
           status: "ambiguous",
           memberId: null,
           matchedName: null,
-          candidates: nameMatches.map((m) => m.member_id),
+          candidates: nameMatches.map((m) => ({ memberId: m.member_id, phone: m.phone })),
         };
       }
       return { file, displayPath, candidateName: nameToken, status: "no_match", memberId: null, matchedName: null };
     });
 
     setMatches(built);
+    setFilter("all");
+    setResults([]);
+  }
+
+  function copyList(list: FileMatch[], label: string) {
+    const text = list
+      .map((m) => {
+        if (m.status === "ambiguous") {
+          const cands = (m.candidates ?? []).map((c) => `${c.memberId}(${maskPhone(c.phone)})`).join(", ");
+          return `${m.displayPath}\t동명이인: ${cands}`;
+        }
+        return `${m.displayPath}\t매칭 회원 없음`;
+      })
+      .join("\n");
+    navigator.clipboard
+      .writeText(text)
+      .then(() => setCopyNotice(`${label} ${list.length}건을 클립보드에 복사했습니다.`))
+      .catch(() => setCopyNotice("복사에 실패했습니다. 브라우저 권한을 확인해주세요."));
+    setTimeout(() => setCopyNotice(null), 4000);
   }
 
   const matchedCount = matches.filter((m) => m.status === "matched").length;
   const ambiguousCount = matches.filter((m) => m.status === "ambiguous").length;
   const noMatchCount = matches.filter((m) => m.status === "no_match").length;
   const skippedCount = matches.filter((m) => m.status === "skipped_has_photo").length;
+  const filteredMatches = filter === "all" ? matches : matches.filter((m) => m.status === filter);
 
   async function runUpload(targets: FileMatch[], previousResults: UploadResult[]) {
     if (targets.length === 0) return;
@@ -260,17 +296,48 @@ export default function PhotoBatchUploadPage() {
 
       {matches.length > 0 && (
         <div className="mt-6 bg-white rounded-2xl shadow-sm p-5">
-          <div className="flex flex-wrap gap-3 text-sm mb-4">
-            <span className="px-3 py-1 rounded-full bg-green-50 text-green-700">매칭됨 {matchedCount}</span>
-            <span className="px-3 py-1 rounded-full bg-amber-50 text-amber-700">동명이인(수동 필요) {ambiguousCount}</span>
-            <span className="px-3 py-1 rounded-full bg-slate-100 text-slate-600">매칭안됨 {noMatchCount}</span>
+          <div className="flex flex-wrap gap-2 text-sm mb-4">
+            <FilterChip active={filter === "all"} onClick={() => setFilter("all")} className="bg-slate-100 text-slate-600">
+              전체 {matches.length}
+            </FilterChip>
+            <FilterChip active={filter === "matched"} onClick={() => setFilter("matched")} className="bg-green-50 text-green-700">
+              매칭됨 {matchedCount}
+            </FilterChip>
+            <FilterChip active={filter === "ambiguous"} onClick={() => setFilter("ambiguous")} className="bg-amber-50 text-amber-700">
+              동명이인(수동 필요) {ambiguousCount}
+            </FilterChip>
+            <FilterChip active={filter === "no_match"} onClick={() => setFilter("no_match")} className="bg-slate-100 text-slate-600">
+              매칭안됨 {noMatchCount}
+            </FilterChip>
             {skippedCount > 0 && (
-              <span className="px-3 py-1 rounded-full bg-slate-100 text-slate-400">기존 사진 있어 건너뜀 {skippedCount}</span>
+              <FilterChip
+                active={filter === "skipped_has_photo"}
+                onClick={() => setFilter("skipped_has_photo")}
+                className="bg-slate-100 text-slate-400"
+              >
+                기존 사진 있어 건너뜀 {skippedCount}
+              </FilterChip>
             )}
           </div>
 
+          {(filter === "ambiguous" || filter === "no_match") && (
+            <button
+              onClick={() =>
+                copyList(
+                  matches.filter((m) => m.status === filter),
+                  filter === "ambiguous" ? "동명이인 목록" : "매칭안됨 목록"
+                )
+              }
+              className="mb-3 text-xs text-blue-600 underline"
+            >
+              현재 목록 복사하기 (엑셀/메모장에 붙여넣기용)
+            </button>
+          )}
+          {copyNotice && <p className="mb-3 text-xs text-green-700">{copyNotice}</p>}
+
           <div className="max-h-80 overflow-y-auto border border-slate-100 rounded-lg divide-y divide-slate-100 text-sm">
-            {matches.map((m, i) => (
+            {filteredMatches.length === 0 && <p className="px-3 py-4 text-slate-400 text-center">해당 항목이 없습니다.</p>}
+            {filteredMatches.map((m, i) => (
               <div key={i} className="flex items-center justify-between px-3 py-2">
                 <span className="truncate text-slate-600 mr-3">{m.displayPath}</span>
                 {m.status === "matched" && (
@@ -279,7 +346,10 @@ export default function PhotoBatchUploadPage() {
                   </span>
                 )}
                 {m.status === "ambiguous" && (
-                  <span className="text-amber-700 shrink-0">동명이인: {m.candidates?.join(", ")}</span>
+                  <span className="text-amber-700 shrink-0 text-right">
+                    동명이인:{" "}
+                    {(m.candidates ?? []).map((c) => `${c.memberId}(${maskPhone(c.phone)})`).join(", ")}
+                  </span>
                 )}
                 {m.status === "no_match" && <span className="text-slate-400 shrink-0">매칭 회원 없음</span>}
                 {m.status === "skipped_has_photo" && (
@@ -328,5 +398,28 @@ export default function PhotoBatchUploadPage() {
         </div>
       )}
     </div>
+  );
+}
+
+function FilterChip({
+  active,
+  onClick,
+  className,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  className: string;
+  children: ReactNode;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`px-3 py-1 rounded-full transition ${className} ${
+        active ? "ring-2 ring-offset-1 ring-blue-400" : "opacity-70 hover:opacity-100"
+      }`}
+    >
+      {children}
+    </button>
   );
 }
