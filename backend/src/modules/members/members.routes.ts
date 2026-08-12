@@ -1,0 +1,337 @@
+import { Router } from "express";
+import multer from "multer";
+import { z } from "zod";
+import { pool } from "../../db/pool";
+import { env } from "../../config/env";
+import { adminGuard } from "../../middleware/guards";
+import { streamPhotoOrDefault, processAndStorePhoto, deletePhotoFile } from "../photos/photos.service";
+import { detectImageType, ALLOWED_PHOTO_EXT } from "../photos/imageValidation";
+import { recordAudit } from "../audit/audit.service";
+import { parseFlexibleDate } from "../../utils/dateUtils";
+import { parsePhone } from "../../utils/phoneUtils";
+import { searchMembers, getMemberDetail, getDashboardStats, suggestNextMemberId } from "./members.service";
+import { AppError } from "../../middleware/errorHandler";
+
+export const membersRouter = Router();
+membersRouter.use(adminGuard);
+
+const memberIdSchema = z.string().min(1).max(30).regex(/^[A-Za-z0-9_-]+$/, "회원번호 형식이 올바르지 않습니다.");
+
+const photoUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: env.maxPhotoSize },
+  fileFilter: (req, file, cb) => {
+    const ext = ("." + file.originalname.split(".").pop()).toLowerCase();
+    if (!ALLOWED_PHOTO_EXT.has(ext)) {
+      return cb(new AppError(400, "사진은 JPG, PNG, WEBP 형식만 업로드할 수 있습니다."));
+    }
+    cb(null, true);
+  },
+}).single("photo");
+
+membersRouter.get("/dashboard", async (req, res) => {
+  res.json(await getDashboardStats());
+});
+
+// 신규 등록 화면에서 "발급연도-일련번호" 형식(예: 2026-1)의 다음 번호를 제안한다. 강제는 아니다.
+membersRouter.get("/next-id", async (req, res) => {
+  const year = new Date().getFullYear();
+  const suggested = await suggestNextMemberId(year);
+  res.json({ suggested });
+});
+
+membersRouter.get("/", async (req, res) => {
+  const page = Math.max(1, parseInt(String(req.query.page ?? "1"), 10) || 1);
+  const pageSize = Math.min(100, Math.max(1, parseInt(String(req.query.pageSize ?? "20"), 10) || 20));
+  const query = typeof req.query.query === "string" ? req.query.query.trim() : undefined;
+  const status = req.query.status === "active" || req.query.status === "inactive" ? req.query.status : undefined;
+
+  const result = await searchMembers({ query, status, page, pageSize });
+  res.json({ items: result.rows, total: result.total, page, pageSize });
+});
+
+membersRouter.get("/:memberId", async (req, res) => {
+  const parsed = memberIdSchema.safeParse(req.params.memberId);
+  if (!parsed.success) return res.status(400).json({ error: "회원번호 형식이 올바르지 않습니다." });
+  const detail = await getMemberDetail(parsed.data);
+  if (!detail) return res.status(404).json({ error: "회원을 찾을 수 없습니다." });
+  res.json(detail);
+});
+
+membersRouter.get("/:memberId/photo", async (req, res) => {
+  const parsed = memberIdSchema.safeParse(req.params.memberId);
+  if (!parsed.success) return res.status(400).json({ error: "회원번호 형식이 올바르지 않습니다." });
+  const { rows } = await pool.query(`SELECT photo_path FROM members WHERE member_id = $1`, [parsed.data]);
+  if (!rows[0]) return res.status(404).json({ error: "회원을 찾을 수 없습니다." });
+  return streamPhotoOrDefault(res, rows[0].photo_path);
+});
+
+// 회원 상세/수정 화면에서 사진을 새로 등록하거나 교체한다.
+membersRouter.post("/:memberId/photo", (req, res, next) => {
+  photoUpload(req, res, async (err) => {
+    if (err) return next(err);
+
+    const parsed = memberIdSchema.safeParse(req.params.memberId);
+    if (!parsed.success) return res.status(400).json({ error: "회원번호 형식이 올바르지 않습니다." });
+    if (!req.file) return res.status(400).json({ error: "사진 파일을 선택해주세요." });
+
+    const { rows } = await pool.query(`SELECT photo_path FROM members WHERE member_id = $1`, [parsed.data]);
+    if (!rows[0]) return res.status(404).json({ error: "회원을 찾을 수 없습니다." });
+
+    if (!detectImageType(req.file.buffer)) {
+      return res.status(400).json({ error: "사진 파일이 손상되었거나 지원하지 않는 형식입니다." });
+    }
+
+    const relPath = await processAndStorePhoto(req.file.buffer, parsed.data);
+    await pool.query(`UPDATE members SET photo_path = $1 WHERE member_id = $2`, [relPath, parsed.data]);
+    await recordAudit({
+      adminId: req.session.auth!.id,
+      memberId: parsed.data,
+      action: "photo_update",
+      oldValue: { hadPhoto: !!rows[0].photo_path },
+      newValue: { hadPhoto: true },
+    });
+
+    res.json({ ok: true });
+  });
+});
+
+const createSchema = z.object({
+  memberId: memberIdSchema,
+  name: z.string().min(1).max(50),
+  birthDate: z.string(),
+  issueDate: z.string(),
+  phone: z.string().min(1, "휴대폰번호를 입력해주세요."),
+});
+
+membersRouter.post("/", (req, res, next) => {
+  photoUpload(req, res, async (err) => {
+    if (err) return next(err);
+
+    const parsed = createSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: "입력값을 확인해주세요.", details: parsed.error.flatten() });
+    }
+    const { memberId, name, birthDate, issueDate, phone } = parsed.data;
+
+    const birth = parseFlexibleDate(birthDate);
+    const issue = parseFlexibleDate(issueDate);
+    if (!birth.ok) return res.status(400).json({ error: `생년월일 오류: ${birth.error}` });
+    if (!issue.ok) return res.status(400).json({ error: `발급일 오류: ${issue.error}` });
+
+    const phoneParsed = parsePhone(phone);
+    if (!phoneParsed.ok) return res.status(400).json({ error: `휴대폰번호 오류: ${phoneParsed.error}` });
+
+    // 사진이 첨부된 경우, DB에 저장하기 전에 먼저 매직바이트로 실제 이미지 형식인지 검증한다
+    // (확장자 위장 차단). 사진 자체는 선택 항목이므로 검증 실패해도 회원 등록은 막지 않는다.
+    let photoWarning: string | null = null;
+    if (req.file && !detectImageType(req.file.buffer)) {
+      photoWarning = "사진 파일이 손상되었거나 지원하지 않는 형식이라 등록되지 않았습니다.";
+    }
+
+    const existing = await pool.query(`SELECT 1 FROM members WHERE member_id = $1`, [memberId]);
+    if (existing.rows.length > 0) {
+      return res.status(409).json({ error: "이미 존재하는 회원번호입니다." });
+    }
+
+    const phoneOwner = await pool.query(`SELECT member_id FROM members WHERE phone = $1`, [phoneParsed.normalized]);
+    if (phoneOwner.rows.length > 0) {
+      return res.status(409).json({ error: `이미 다른 회원(${phoneOwner.rows[0].member_id})에게 등록된 휴대폰번호입니다.` });
+    }
+
+    await pool.query(
+      `INSERT INTO members (member_id, name, birth_date, issue_date, phone)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [memberId, name, birth.iso, issue.iso, phoneParsed.normalized]
+    );
+
+    await recordAudit({
+      adminId: req.session.auth!.id,
+      memberId,
+      action: "create",
+      newValue: { name, birthDate: birth.iso, issueDate: issue.iso, phone: phoneParsed.normalized },
+    });
+
+    if (req.file && !photoWarning) {
+      const relPath = await processAndStorePhoto(req.file.buffer, memberId);
+      await pool.query(`UPDATE members SET photo_path = $1 WHERE member_id = $2`, [relPath, memberId]);
+      await recordAudit({ adminId: req.session.auth!.id, memberId, action: "photo_update" });
+    }
+
+    res.status(201).json({ ok: true, memberId, photoWarning });
+  });
+});
+
+const updateSchema = z.object({
+  name: z.string().min(1).max(50).optional(),
+  birthDate: z.string().optional(),
+  issueDate: z.string().optional(),
+  phone: z.string().optional(),
+});
+
+membersRouter.put("/:memberId", async (req, res) => {
+  const memberIdParsed = memberIdSchema.safeParse(req.params.memberId);
+  if (!memberIdParsed.success) return res.status(400).json({ error: "회원번호 형식이 올바르지 않습니다." });
+
+  const parsed = updateSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: "입력값을 확인해주세요." });
+
+  const { rows } = await pool.query(`SELECT * FROM members WHERE member_id = $1`, [memberIdParsed.data]);
+  const before = rows[0];
+  if (!before) return res.status(404).json({ error: "회원을 찾을 수 없습니다." });
+
+  const updates: Record<string, string> = {};
+  if (parsed.data.name !== undefined) updates.name = parsed.data.name;
+  if (parsed.data.birthDate !== undefined) {
+    const r = parseFlexibleDate(parsed.data.birthDate);
+    if (!r.ok) return res.status(400).json({ error: `생년월일 오류: ${r.error}` });
+    updates.birth_date = r.iso;
+  }
+  if (parsed.data.issueDate !== undefined) {
+    const r = parseFlexibleDate(parsed.data.issueDate);
+    if (!r.ok) return res.status(400).json({ error: `발급일 오류: ${r.error}` });
+    updates.issue_date = r.iso;
+  }
+  if (parsed.data.phone !== undefined) {
+    const r = parsePhone(parsed.data.phone);
+    if (!r.ok) return res.status(400).json({ error: `휴대폰번호 오류: ${r.error}` });
+    const owner = await pool.query(`SELECT member_id FROM members WHERE phone = $1 AND member_id != $2`, [
+      r.normalized,
+      memberIdParsed.data,
+    ]);
+    if (owner.rows.length > 0) {
+      return res.status(409).json({ error: `이미 다른 회원(${owner.rows[0].member_id})에게 등록된 휴대폰번호입니다.` });
+    }
+    updates.phone = r.normalized;
+  }
+
+  if (Object.keys(updates).length === 0) {
+    return res.status(400).json({ error: "변경할 값이 없습니다." });
+  }
+
+  const setClauses = Object.keys(updates).map((k, i) => `${k} = $${i + 2}`);
+  await pool.query(
+    `UPDATE members SET ${setClauses.join(", ")} WHERE member_id = $1`,
+    [memberIdParsed.data, ...Object.values(updates)]
+  );
+
+  await recordAudit({
+    adminId: req.session.auth!.id,
+    memberId: memberIdParsed.data,
+    action: "update",
+    oldValue: { name: before.name, birthDate: before.birth_date, issueDate: before.issue_date, phone: before.phone },
+    newValue: updates,
+  });
+
+  res.json({ ok: true });
+});
+
+membersRouter.post("/:memberId/deactivate", async (req, res) => {
+  const memberIdParsed = memberIdSchema.safeParse(req.params.memberId);
+  if (!memberIdParsed.success) return res.status(400).json({ error: "회원번호 형식이 올바르지 않습니다." });
+
+  const { rows } = await pool.query(`SELECT status FROM members WHERE member_id = $1`, [memberIdParsed.data]);
+  if (!rows[0]) return res.status(404).json({ error: "회원을 찾을 수 없습니다." });
+  if (rows[0].status === "inactive") {
+    return res.json({ ok: true, alreadyInactive: true });
+  }
+
+  await pool.query(`UPDATE members SET status = 'inactive' WHERE member_id = $1`, [memberIdParsed.data]);
+  await recordAudit({
+    adminId: req.session.auth!.id,
+    memberId: memberIdParsed.data,
+    action: "deactivate",
+    oldValue: { status: "active" },
+    newValue: { status: "inactive" },
+  });
+  res.json({ ok: true });
+});
+
+membersRouter.post("/:memberId/reactivate", async (req, res) => {
+  const memberIdParsed = memberIdSchema.safeParse(req.params.memberId);
+  if (!memberIdParsed.success) return res.status(400).json({ error: "회원번호 형식이 올바르지 않습니다." });
+
+  const { rows } = await pool.query(`SELECT status FROM members WHERE member_id = $1`, [memberIdParsed.data]);
+  if (!rows[0]) return res.status(404).json({ error: "회원을 찾을 수 없습니다." });
+
+  await pool.query(`UPDATE members SET status = 'active' WHERE member_id = $1`, [memberIdParsed.data]);
+  await recordAudit({
+    adminId: req.session.auth!.id,
+    memberId: memberIdParsed.data,
+    action: "reactivate",
+    oldValue: { status: rows[0].status },
+    newValue: { status: "active" },
+  });
+  res.json({ ok: true });
+});
+
+// 회원 완전 삭제. 데이터 안전을 위해 반드시 "비활성" 상태인 회원만 삭제할 수 있다
+// (PRD 37: 물리 삭제 원칙적 금지 — 단, 관리자가 명시적으로 비활성화한 뒤 확인 후 삭제하는 것만 허용).
+membersRouter.delete("/:memberId", async (req, res) => {
+  const memberIdParsed = memberIdSchema.safeParse(req.params.memberId);
+  if (!memberIdParsed.success) return res.status(400).json({ error: "회원번호 형식이 올바르지 않습니다." });
+
+  const { rows } = await pool.query(
+    `SELECT name, birth_date::text, issue_date::text, status, phone, photo_path FROM members WHERE member_id = $1`,
+    [memberIdParsed.data]
+  );
+  const member = rows[0];
+  if (!member) return res.status(404).json({ error: "회원을 찾을 수 없습니다." });
+  if (member.status !== "inactive") {
+    return res.status(409).json({ error: "비활성화된 회원만 삭제할 수 있습니다. 먼저 회원을 비활성화해주세요." });
+  }
+
+  await pool.query(`DELETE FROM members WHERE member_id = $1 AND status = 'inactive'`, [memberIdParsed.data]);
+  deletePhotoFile(member.photo_path);
+
+  await recordAudit({
+    adminId: req.session.auth!.id,
+    memberId: memberIdParsed.data,
+    action: "delete",
+    oldValue: { name: member.name, birthDate: member.birth_date, issueDate: member.issue_date, phone: member.phone },
+  });
+
+  res.json({ ok: true });
+});
+
+const bulkDeleteSchema = z.object({
+  memberIds: z.array(memberIdSchema).min(1).max(500),
+});
+
+// 회원목록 화면에서 여러 명을 체크해 한 번에 삭제한다. 단일 삭제와 동일하게
+// "비활성" 상태인 회원만 대상이며, 선택 항목 중 활성 회원은 건너뛰고 사유를 알려준다.
+membersRouter.post("/bulk-delete", async (req, res) => {
+  const parsed = bulkDeleteSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: "삭제할 회원을 선택해주세요." });
+
+  const deleted: string[] = [];
+  const skipped: { memberId: string; reason: string }[] = [];
+
+  for (const memberId of parsed.data.memberIds) {
+    const { rows } = await pool.query(
+      `SELECT name, birth_date::text, issue_date::text, status, phone, photo_path FROM members WHERE member_id = $1`,
+      [memberId]
+    );
+    const member = rows[0];
+    if (!member) {
+      skipped.push({ memberId, reason: "존재하지 않는 회원" });
+      continue;
+    }
+    if (member.status !== "inactive") {
+      skipped.push({ memberId, reason: "활성 회원은 삭제할 수 없음 (먼저 비활성화 필요)" });
+      continue;
+    }
+
+    await pool.query(`DELETE FROM members WHERE member_id = $1 AND status = 'inactive'`, [memberId]);
+    deletePhotoFile(member.photo_path);
+    await recordAudit({
+      adminId: req.session.auth!.id,
+      memberId,
+      action: "delete",
+      oldValue: { name: member.name, birthDate: member.birth_date, issueDate: member.issue_date, phone: member.phone },
+    });
+    deleted.push(memberId);
+  }
+
+  res.json({ deleted, skipped });
+});

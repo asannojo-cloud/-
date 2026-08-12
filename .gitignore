@@ -1,0 +1,20 @@
+node_modules/
+dist/
+build/
+.env
+.env.local
+*.log
+
+# 개인정보 포함 가능성이 있는 업로드/저장 데이터 — 절대 커밋 금지
+# (실제 저장 위치는 backend/storage/photos — PHOTO_STORAGE_DIR이 backend 패키지 루트 기준으로 정해짐)
+storage/photos/*
+!storage/photos/.gitkeep
+backend/storage/photos/*
+!backend/storage/photos/.gitkeep
+backend/uploads/
+backend/tmp/
+
+# 에디터/OS
+.vscode/
+.DS_Store
+Thumbs.db
