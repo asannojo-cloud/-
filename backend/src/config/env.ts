@@ -30,4 +30,6 @@ export const env = {
   maxExcelSize: parseInt(process.env.MAX_EXCEL_SIZE ?? "10485760", 10),
   maxZipSize: parseInt(process.env.MAX_ZIP_SIZE ?? "209715200", 10),
   maxPhotoSize: parseInt(process.env.MAX_PHOTO_SIZE ?? "5242880", 10),
+  // 운영 배포 시 백엔드가 프론트엔드 정적 빌드도 함께 서빙한다 (별도 서비스/CORS 불필요).
+  frontendDistDir: path.resolve(backendRoot, "..", "frontend", "dist"),
 };

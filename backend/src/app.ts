@@ -1,6 +1,8 @@
 import express from "express";
 import helmet from "helmet";
 import cors from "cors";
+import fs from "fs";
+import path from "path";
 import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
 import { pool } from "./db/pool";
@@ -58,6 +60,21 @@ export function createApp() {
   app.use("/api/admin/audit-logs", auditRouter);
 
   app.use("/api", notFoundHandler);
+
+  // 운영 배포: 프론트엔드 정적 빌드(frontend/dist)를 같은 서버에서 함께 서빙한다.
+  // (별도 서비스로 나누지 않아 CORS·환경변수 관리가 단순해진다)
+  if (fs.existsSync(env.frontendDistDir)) {
+    app.use(
+      express.static(env.frontendDistDir, {
+        // index.html은 항상 최신을 받아야 하므로(배포마다 해시가 바뀐 자산을 참조) 캐시하지 않는다.
+        index: false,
+      })
+    );
+    app.get(/^(?!\/api).*/, (req, res) => {
+      res.sendFile(path.join(env.frontendDistDir, "index.html"));
+    });
+  }
+
   app.use(errorHandler);
 
   return app;
