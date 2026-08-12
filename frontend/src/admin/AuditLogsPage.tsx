@@ -60,8 +60,8 @@ export default function AuditLogsPage() {
         </button>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-        <table className="w-full text-sm">
+      <div className="bg-white rounded-xl shadow-sm overflow-x-auto">
+        <table className="w-full text-sm min-w-[700px]">
           <thead className="bg-slate-50 text-slate-500 text-left">
             <tr>
               <th className="px-4 py-2.5">일시</th>

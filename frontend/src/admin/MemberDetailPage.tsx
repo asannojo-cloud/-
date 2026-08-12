@@ -137,8 +137,8 @@ export default function MemberDetailPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-3 gap-6">
-        <div className="bg-white rounded-xl shadow-sm p-5 flex flex-col items-center">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <div className="bg-white rounded-xl shadow-sm p-5 flex flex-col items-center sm:max-w-none max-w-[10rem] mx-auto w-full">
           <div className="w-32 aspect-[3/4] rounded-lg overflow-hidden bg-slate-100 border border-slate-200">
             {detail.has_photo ? (
               <img

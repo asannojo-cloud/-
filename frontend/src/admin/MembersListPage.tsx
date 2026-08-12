@@ -220,8 +220,8 @@ export default function MembersListPage() {
 
       {bulkResultMessage && <p className="text-sm text-green-600 mb-3">{bulkResultMessage}</p>}
 
-      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-        <table className="w-full text-sm">
+      <div className="bg-white rounded-xl shadow-sm overflow-x-auto">
+        <table className="w-full text-sm min-w-[640px]">
           <thead className="bg-slate-50 text-slate-500 text-left">
             <tr>
               <th className="px-4 py-2.5 w-10">

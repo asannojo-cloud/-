@@ -43,14 +43,14 @@ export default function DashboardPage() {
     <div>
       <h1 className="text-xl font-bold text-slate-900 mb-6">대시보드</h1>
 
-      <div className="grid grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatCard label="전체 회원 수" value={data.counts.total} />
         <StatCard label="정상 회원 수" value={data.counts.active} />
         <StatCard label="비활성 회원 수" value={data.counts.inactive} />
         <StatCard label="최근 30일 신규" value={data.counts.new_recent} />
       </div>
 
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <section className="bg-white rounded-xl shadow-sm p-5">
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-semibold text-slate-800">최근 Excel 업로드</h2>

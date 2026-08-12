@@ -210,7 +210,7 @@ export default function ExcelUploadPage() {
             {headersData.fileName} · 총 {headersData.totalRows}행 · 컬럼 매핑을 확인해주세요.
           </p>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {ALL_FIELDS.map((field) => (
               <div key={field}>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -265,7 +265,7 @@ export default function ExcelUploadPage() {
         <div className="space-y-5">
           <div className="bg-white rounded-xl shadow-sm p-6">
             <h2 className="font-semibold text-slate-800 mb-4">회원명부 검증 결과</h2>
-            <div className="grid grid-cols-6 gap-3 text-center">
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 text-center">
               <SummaryCell label="전체" value={result.summary.totalRows} onClick={() => setFilter("all")} active={filter === "all"} />
               <SummaryCell label="신규 등록" value={result.summary.newCount} onClick={() => setFilter("new")} active={filter === "new"} />
               <SummaryCell label="정보 변경" value={result.summary.updatedCount} onClick={() => setFilter("update")} active={filter === "update"} />
@@ -286,8 +286,8 @@ export default function ExcelUploadPage() {
             )}
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-            <table className="w-full text-sm">
+          <div className="bg-white rounded-xl shadow-sm overflow-x-auto">
+            <table className="w-full text-sm min-w-[600px]">
               <thead className="bg-slate-50 text-slate-500 text-left">
                 <tr>
                   <th className="px-3 py-2">행</th>
