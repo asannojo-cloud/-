@@ -64,6 +64,32 @@ export function createApp() {
 
   app.get("/api/health", (req, res) => res.json({ ok: true }));
 
+  // TEMP DEBUG (2026-08-12): 운영 배포에서 로그인 500 원인 진단용. 원인 확인 후 반드시 제거할 것.
+  app.get("/api/_debug/dbcheck", async (req, res) => {
+    const redactedUrl = env.databaseUrl.replace(/:\/\/[^@]*@/, "://***:***@");
+    const out: Record<string, unknown> = {
+      nodeEnvRaw: process.env.NODE_ENV,
+      isProduction: env.isProduction,
+      databaseUrlRedacted: redactedUrl,
+    };
+    try {
+      const r = await pool.query("SELECT 1 as ok");
+      out.dbQuery = { ok: true, result: r.rows[0] };
+    } catch (e) {
+      out.dbQuery = { ok: false, error: e instanceof Error ? { message: e.message, name: e.name, stack: e.stack } : String(e) };
+    }
+    try {
+      const store = new PgSession({ pool, tableName: "session", createTableIfMissing: true });
+      await new Promise<void>((resolve, reject) => {
+        store.set("debugcheck-sid", { cookie: {} } as any, (err) => (err ? reject(err) : resolve()));
+      });
+      out.sessionStore = { ok: true };
+    } catch (e) {
+      out.sessionStore = { ok: false, error: e instanceof Error ? { message: e.message, name: e.name, stack: e.stack } : String(e) };
+    }
+    res.json(out);
+  });
+
   app.use("/api/member/login", loginRateLimiter);
   app.use("/api/member", memberAuthRouter);
 

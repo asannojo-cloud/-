@@ -40,6 +40,23 @@ export function parseFlexibleDate(raw: unknown): DateParseResult {
   }
 
   if (typeof raw === "number") {
+    // 엑셀 셀이 날짜 서식이 아니라 "19850315"처럼 YYYYMMDD 형태의 순수 숫자로
+    // 입력된 경우가 있다. 이런 값을 Excel 일련값으로 해석하면 연도가 수만 년대로
+    // 튀는 오류가 발생하므로(2026-08-12 발견), 8자리 정수는 먼저 YYYYMMDD로 시도한다.
+    // 실제 Excel 날짜 일련값은 8자리(1000만 이상)에 도달하려면 서기 27000년대가
+    // 되어야 하므로 이 둘은 자릿수로 명확히 구분된다.
+    if (Number.isInteger(raw) && raw >= 10000101 && raw <= 99991231) {
+      const y = Math.floor(raw / 10000);
+      const mo = Math.floor((raw % 10000) / 100);
+      const d = raw % 100;
+      if (isValidCalendarDate(y, mo, d)) {
+        return { ok: true, iso: `${y}-${pad2(mo)}-${pad2(d)}` };
+      }
+      // 8자리 숫자인데 달력상 존재하지 않는 날짜라면 오류로 처리한다.
+      // (Excel 일련값은 이 범위에 도달할 수 없으므로 재해석 대상이 아니다.)
+      return { ok: false, error: "존재하지 않는 날짜입니다." };
+    }
+
     const parsed = excelSerialToDate(raw);
     if (!parsed || !isValidCalendarDate(parsed.y, parsed.m, parsed.d)) {
       return { ok: false, error: "존재하지 않는 날짜입니다." };
