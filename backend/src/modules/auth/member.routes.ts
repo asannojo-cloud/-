@@ -32,11 +32,20 @@ memberAuthRouter.post("/login", async (req, res) => {
     return res.status(401).json(genericError);
   }
 
+  // 휴대폰번호는 UNIQUE라 최대 1건만 일치한다. 먼저 휴대폰번호로 조회한 뒤,
+  // 이름은 애플리케이션 단에서 비교한다 — 동명이인 구분을 위해 명부에 "이아영c"처럼
+  // 끝에 소문자 알파벳 한 글자가 붙어 있는 경우가 있는데, 회원이 그 알파벳까지
+  // 외워서 입력하긴 어려우므로 뒤의 소문자 한 글자는 생략해도 인식하도록 한다
+  // (2026-08-13). 어차피 휴대폰번호가 실제 신원 확인의 핵심이라 안전하다.
+  const inputName = name.trim();
   const { rows } = await pool.query(
-    `SELECT id, member_id, name, status FROM members WHERE name = $1 AND phone = $2`,
-    [name.trim(), phoneParsed.normalized]
+    `SELECT id, member_id, name, status FROM members WHERE phone = $1`,
+    [phoneParsed.normalized]
   );
-  const member = rows[0];
+  const candidate = rows[0];
+  const nameMatches =
+    candidate && (candidate.name === inputName || candidate.name.replace(/[a-z]$/, "") === inputName);
+  const member = nameMatches ? candidate : undefined;
 
   if (!member) {
     // 계정 존재 여부를 노출하지 않도록 이름 불일치/휴대폰 불일치를 구분하지 않는다.
