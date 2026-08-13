@@ -174,11 +174,18 @@ export default function PhotoBatchUploadPage() {
   const [exporting, setExporting] = useState(false);
   const [exportNotice, setExportNotice] = useState<string | null>(null);
 
-  // 매칭실패(동명이인 + 매칭안됨) 사진을 실제 파일로 폴더에 저장한다.
-  // File System Access API를 지원하는 브라우저(Chrome/Edge)에서만 동작한다 — 폴더 선택
-  // 화면과 동일한 브라우저 요구사항이라 이미 이 화면을 쓸 수 있다면 문제없이 쓸 수 있다.
+  // 결국 회원에게 반영되지 못한 사진(동명이인 + 매칭안됨 + 업로드 시도했지만 실패한 것)을
+  // 실제 파일로 폴더에 모아준다. File System Access API를 지원하는 브라우저(Chrome/Edge)에서만
+  // 동작한다 — 폴더 선택 화면과 동일한 브라우저 요구사항이라 이미 이 화면을 쓸 수 있다면 문제없다.
+  function getUnresolvedTargets(): FileMatch[] {
+    const uploadFailedPaths = new Set(results.filter((r) => !r.ok).map((r) => r.path));
+    return matches.filter(
+      (m) => m.status === "ambiguous" || m.status === "no_match" || uploadFailedPaths.has(m.displayPath)
+    );
+  }
+
   async function handleExportUnmatched() {
-    const targets = matches.filter((m) => m.status === "ambiguous" || m.status === "no_match");
+    const targets = getUnresolvedTargets();
     if (targets.length === 0) return;
 
     const picker = (window as any).showDirectoryPicker;
@@ -211,7 +218,7 @@ export default function PhotoBatchUploadPage() {
         await writable.write(m.file);
         await writable.close();
       }
-      setExportNotice(`매칭실패 사진 ${targets.length}장을 폴더에 저장했습니다.`);
+      setExportNotice(`반영되지 못한 사진 ${targets.length}장을 폴더에 저장했습니다.`);
     } catch (e) {
       // 사용자가 폴더 선택을 취소한 경우도 이 catch를 타는데, 그건 오류가 아니므로 조용히 넘어간다.
       if (e instanceof DOMException && e.name === "AbortError") {
@@ -246,6 +253,7 @@ export default function PhotoBatchUploadPage() {
   const ambiguousCount = matches.filter((m) => m.status === "ambiguous").length;
   const noMatchCount = matches.filter((m) => m.status === "no_match").length;
   const skippedCount = matches.filter((m) => m.status === "skipped_has_photo").length;
+  const unresolvedCount = getUnresolvedTargets().length;
   const filteredMatches = filter === "all" ? matches : matches.filter((m) => m.status === filter);
 
   async function runUpload(targets: FileMatch[], previousResults: UploadResult[]) {
@@ -387,7 +395,7 @@ export default function PhotoBatchUploadPage() {
               현재 목록 복사하기 (엑셀/메모장에 붙여넣기용)
             </button>
           )}
-          {ambiguousCount + noMatchCount > 0 && (
+          {unresolvedCount > 0 && (
             <button
               onClick={handleExportUnmatched}
               disabled={exporting}
@@ -395,7 +403,7 @@ export default function PhotoBatchUploadPage() {
             >
               {exporting
                 ? "폴더에 저장 중..."
-                : `매칭실패 사진 ${ambiguousCount + noMatchCount}장 폴더로 저장하기`}
+                : `반영 안 된 사진 ${unresolvedCount}장 폴더로 저장하기 (동명이인·매칭안됨·업로드실패)`}
             </button>
           )}
           {copyNotice && <p className="mb-3 text-xs text-green-700">{copyNotice}</p>}
