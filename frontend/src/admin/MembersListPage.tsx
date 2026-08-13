@@ -1,6 +1,26 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api, ApiError } from "../shared/api";
+
+// 회원 상세로 들어갔다가 뒤로 돌아왔을 때 검색어/필터/페이지를 다시 입력하지 않아도 되도록
+// sessionStorage에 저장해둔다 (탭을 닫으면 초기화되며, 다른 탭/새 방문에는 영향 없음).
+const FILTERS_STORAGE_KEY = "admin.membersListFilters";
+
+interface SavedFilters {
+  query: string;
+  status: "" | "active" | "inactive";
+  hasPhoto: "" | "true" | "false";
+  page: number;
+}
+
+function loadSavedFilters(): SavedFilters | null {
+  try {
+    const raw = sessionStorage.getItem(FILTERS_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
 
 interface MemberRow {
   member_id: string;
@@ -20,12 +40,12 @@ function formatPhone(digits: string | null): string {
 
 export default function MembersListPage() {
   const navigate = useNavigate();
-  const [query, setQuery] = useState("");
-  const [status, setStatus] = useState<"" | "active" | "inactive">("");
-  const [hasPhoto, setHasPhoto] = useState<"" | "true" | "false">("");
+  const [query, setQuery] = useState(() => loadSavedFilters()?.query ?? "");
+  const [status, setStatus] = useState<"" | "active" | "inactive">(() => loadSavedFilters()?.status ?? "");
+  const [hasPhoto, setHasPhoto] = useState<"" | "true" | "false">(() => loadSavedFilters()?.hasPhoto ?? "");
   const [items, setItems] = useState<MemberRow[]>([]);
   const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(() => loadSavedFilters()?.page ?? 1);
   const pageSize = 20;
 
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -53,9 +73,22 @@ export default function MembersListPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, status, hasPhoto]);
 
+  // 검색어/필터/페이지가 바뀔 때마다 저장해둔다 — 회원 상세로 이동했다가 돌아와도
+  // 다시 검색할 필요 없이 그대로 이어서 볼 수 있게 하기 위함.
+  useEffect(() => {
+    sessionStorage.setItem(FILTERS_STORAGE_KEY, JSON.stringify({ query, status, hasPhoto, page }));
+  }, [query, status, hasPhoto, page]);
+
   // 입력할 때마다 자동으로 검색한다 (한글 입력기 조합 중 Enter가 "글자 확정"으로
   // 소비되어 검색이 트리거되지 않는 문제를 근본적으로 피하기 위함).
+  const isFirstQueryRun = useRef(true);
   useEffect(() => {
+    // 최초 마운트 시에는(복원된 검색어가 있어도) 페이지를 리셋하거나 중복 로드하지
+    // 않는다 — 위 [page, status, hasPhoto] 이펙트가 이미 최초 로드를 담당한다.
+    if (isFirstQueryRun.current) {
+      isFirstQueryRun.current = false;
+      return;
+    }
     const timer = setTimeout(() => {
       setPage(1);
       load();
