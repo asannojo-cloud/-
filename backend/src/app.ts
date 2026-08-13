@@ -72,6 +72,10 @@ export function createApp() {
       hasSecretAccessKey: !!env.r2.secretAccessKey,
       hasBucketName: !!env.r2.bucketName,
       bucketName: env.r2.bucketName ?? null,
+      // Account ID는 비밀값이 아니라(엔드포인트 URL의 일부로 어차피 노출됨) 진단을 위해 그대로 보여준다.
+      accountId: env.r2.accountId ?? null,
+      accessKeyIdLength: env.r2.accessKeyId?.length ?? 0,
+      secretAccessKeyLength: env.r2.secretAccessKey?.length ?? 0,
     };
     try {
       const { processAndStorePhoto } = await import("./modules/photos/photos.service");
