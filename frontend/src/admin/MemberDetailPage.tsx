@@ -209,15 +209,25 @@ export default function MemberDetailPage() {
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         <div className="bg-white rounded-xl shadow-sm p-5 flex flex-col items-center sm:max-w-none max-w-[10rem] mx-auto w-full">
-          <div className="w-32 aspect-[3/4] rounded-lg overflow-hidden bg-slate-100 border border-slate-200">
+          {/* 사진 영역 자체도 contentEditable로 만들어 우클릭 "붙여넣기" 메뉴가 뜨도록 한다.
+              img은 contentEditable={false}로 빼서 리사이즈 핸들 등이 뜨지 않게 한다. */}
+          <div
+            contentEditable
+            suppressContentEditableWarning
+            onPaste={(e) => e.preventDefault()}
+            className="w-32 aspect-[3/4] rounded-lg overflow-hidden bg-slate-100 border border-slate-200 outline-none cursor-copy focus:border-blue-400"
+          >
             {detail.has_photo ? (
               <img
                 key={photoVersion}
+                contentEditable={false}
                 src={`${photoUrl(`/admin/members/${detail.member_id}/photo`)}?v=${photoVersion}`}
                 className="w-full h-full object-cover"
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-xs text-slate-400">사진 없음</div>
+              <div contentEditable={false} className="w-full h-full flex items-center justify-center text-xs text-slate-400">
+                사진 없음
+              </div>
             )}
           </div>
 
