@@ -284,7 +284,7 @@ membersRouter.delete("/:memberId", async (req, res) => {
   }
 
   await pool.query(`DELETE FROM members WHERE member_id = $1 AND status = 'inactive'`, [memberIdParsed.data]);
-  deletePhotoFile(member.photo_path);
+  await deletePhotoFile(member.photo_path);
 
   await recordAudit({
     adminId: req.session.auth!.id,
@@ -325,7 +325,7 @@ membersRouter.post("/bulk-delete", async (req, res) => {
     }
 
     await pool.query(`DELETE FROM members WHERE member_id = $1 AND status = 'inactive'`, [memberId]);
-    deletePhotoFile(member.photo_path);
+    await deletePhotoFile(member.photo_path);
     await recordAudit({
       adminId: req.session.auth!.id,
       memberId,

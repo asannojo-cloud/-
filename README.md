@@ -32,6 +32,12 @@ PORT=4000
 FRONTEND_ORIGIN=http://localhost:5173
 ```
 
+**사진 저장소(선택)**: `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME` 4개를 모두
+설정하면 Cloudflare R2(영구 저장)에 사진을 저장한다. 하나라도 비어 있으면 로컬 디스크(`PHOTO_STORAGE_DIR`,
+기본 `storage/photos`)에 저장한다 — 로컬 개발은 R2 없이도 그대로 동작한다. **운영 배포(Render 등)에서는
+반드시 R2를 설정해야 한다** — 로컬 디스크는 배포/재시작 때마다 초기화되는 경우가 많아 사진이 사라진다
+(2026-08-12 실제로 겪은 문제).
+
 DB 계정/DB는 다음과 같이 생성했다 (운영 환경에서도 동일한 패턴 권장 — 앱 전용 계정 사용, `postgres` 슈퍼유저 직접 사용 금지):
 
 ```sql
@@ -99,8 +105,8 @@ npm run dev:frontend   # http://localhost:5173 (백엔드로 /api 프록시)
 3. **백엔드 빌드/실행**: `npm run build:backend` 후 `node backend/dist/server.js` (또는 pm2 등 프로세스 매니저 사용).
 4. **프론트엔드 빌드**: `npm run build:frontend` → `frontend/dist`를 Nginx 등 정적 서버 또는 백엔드에서 서빙. `/api`는 백엔드로 리버스 프록시한다.
 5. **HTTPS**: 리버스 프록시(Nginx/Caddy 등)에서 TLS 종료 후 백엔드로 프록시. PWA와 세션 쿠키 `secure` 옵션 요구사항 상 운영 환경은 반드시 HTTPS여야 한다.
-6. **사진 저장소**: `PHOTO_STORAGE_DIR`(기본 `storage/photos`)는 웹 서버의 정적 공개 경로에 포함시키지 않는다. 백업 시 이 디렉터리와 DB를 함께 백업한다.
-7. **백업**: PostgreSQL 정기 백업(`pg_dump`) + `storage/photos` 디렉터리 백업을 함께 스케줄링한다.
+6. **사진 저장소**: Render처럼 배포/재시작 때마다 로컬 디스크가 초기화되는 환경에서는 반드시 `R2_ACCOUNT_ID`/`R2_ACCESS_KEY_ID`/`R2_SECRET_ACCESS_KEY`/`R2_BUCKET_NAME`을 설정해 Cloudflare R2를 사용한다(2026-08-12부터 적용, 그 전까지는 배포할 때마다 사진이 사라지는 문제가 있었다). 영구 디스크가 보장되는 환경이라면 `PHOTO_STORAGE_DIR`(기본 `storage/photos`)로 로컬 저장도 가능하며, 이 경우 웹 서버의 정적 공개 경로에는 포함시키지 않는다.
+7. **백업**: PostgreSQL 정기 백업(`pg_dump`) + (R2 사용 시) R2 버킷 백업 또는 (로컬 저장 시) `storage/photos` 디렉터리 백업을 함께 스케줄링한다.
 
 ## 알려진 제한 / 향후 개선
 

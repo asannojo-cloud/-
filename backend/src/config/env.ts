@@ -27,6 +27,15 @@ export const env = {
   loginLockMinutes: parseInt(process.env.LOGIN_LOCK_MINUTES ?? "15", 10),
   photoStorageDir: path.resolve(backendRoot, process.env.PHOTO_STORAGE_DIR ?? "./storage/photos"),
   uploadTmpDir: path.resolve(backendRoot, process.env.UPLOAD_TMP_DIR ?? "./tmp/uploads"),
+  // Cloudflare R2(S3 호환) 설정 — 4개 값이 전부 있어야 R2를 사용한다. 하나라도 없으면
+  // photoStorageDir(로컬 디스크)로 대체 저장한다 (2026-08-12: Render 무료 플랜은 배포마다
+  // 로컬 디스크가 초기화되어 사진이 사라지는 문제가 있어 영구 저장소로 전환).
+  r2: {
+    accountId: process.env.R2_ACCOUNT_ID,
+    accessKeyId: process.env.R2_ACCESS_KEY_ID,
+    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
+    bucketName: process.env.R2_BUCKET_NAME,
+  },
   maxExcelSize: parseInt(process.env.MAX_EXCEL_SIZE ?? "10485760", 10),
   maxZipSize: parseInt(process.env.MAX_ZIP_SIZE ?? "209715200", 10),
   // 스마트폰 카메라 사진은 5MB를 넘는 경우가 흔해서(2026-08-12 사진 일괄 업로드 중 확인)
