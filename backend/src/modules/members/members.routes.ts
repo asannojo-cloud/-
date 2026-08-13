@@ -69,32 +69,38 @@ membersRouter.get("/:memberId/photo", async (req, res) => {
 });
 
 // 회원 상세/수정 화면에서 사진을 새로 등록하거나 교체한다.
+// multer 콜백 안의 async 함수는 express-async-errors가 잡아주는 "라우트 핸들러가 직접
+// 반환한 Promise"가 아니라서, try/catch 없이 두면 실패 시 응답을 아예 못 보내고 요청이
+// 그대로 멈춰버린다(2026-08-12, R2 전환 중 실제로 겪음 — 클라이언트는 타임아웃까지 무한 대기).
 membersRouter.post("/:memberId/photo", (req, res, next) => {
   photoUpload(req, res, async (err) => {
     if (err) return next(err);
+    try {
+      const parsed = memberIdSchema.safeParse(req.params.memberId);
+      if (!parsed.success) return res.status(400).json({ error: "회원번호 형식이 올바르지 않습니다." });
+      if (!req.file) return res.status(400).json({ error: "사진 파일을 선택해주세요." });
 
-    const parsed = memberIdSchema.safeParse(req.params.memberId);
-    if (!parsed.success) return res.status(400).json({ error: "회원번호 형식이 올바르지 않습니다." });
-    if (!req.file) return res.status(400).json({ error: "사진 파일을 선택해주세요." });
+      const { rows } = await pool.query(`SELECT photo_path FROM members WHERE member_id = $1`, [parsed.data]);
+      if (!rows[0]) return res.status(404).json({ error: "회원을 찾을 수 없습니다." });
 
-    const { rows } = await pool.query(`SELECT photo_path FROM members WHERE member_id = $1`, [parsed.data]);
-    if (!rows[0]) return res.status(404).json({ error: "회원을 찾을 수 없습니다." });
+      if (!detectImageType(req.file.buffer)) {
+        return res.status(400).json({ error: "사진 파일이 손상되었거나 지원하지 않는 형식입니다." });
+      }
 
-    if (!detectImageType(req.file.buffer)) {
-      return res.status(400).json({ error: "사진 파일이 손상되었거나 지원하지 않는 형식입니다." });
+      const relPath = await processAndStorePhoto(req.file.buffer, parsed.data);
+      await pool.query(`UPDATE members SET photo_path = $1 WHERE member_id = $2`, [relPath, parsed.data]);
+      await recordAudit({
+        adminId: req.session.auth!.id,
+        memberId: parsed.data,
+        action: "photo_update",
+        oldValue: { hadPhoto: !!rows[0].photo_path },
+        newValue: { hadPhoto: true },
+      });
+
+      res.json({ ok: true });
+    } catch (e) {
+      next(e);
     }
-
-    const relPath = await processAndStorePhoto(req.file.buffer, parsed.data);
-    await pool.query(`UPDATE members SET photo_path = $1 WHERE member_id = $2`, [relPath, parsed.data]);
-    await recordAudit({
-      adminId: req.session.auth!.id,
-      memberId: parsed.data,
-      action: "photo_update",
-      oldValue: { hadPhoto: !!rows[0].photo_path },
-      newValue: { hadPhoto: true },
-    });
-
-    res.json({ ok: true });
   });
 });
 
@@ -109,58 +115,61 @@ const createSchema = z.object({
 membersRouter.post("/", (req, res, next) => {
   photoUpload(req, res, async (err) => {
     if (err) return next(err);
+    try {
+      const parsed = createSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "입력값을 확인해주세요.", details: parsed.error.flatten() });
+      }
+      const { memberId, name, birthDate, issueDate, phone } = parsed.data;
 
-    const parsed = createSchema.safeParse(req.body);
-    if (!parsed.success) {
-      return res.status(400).json({ error: "입력값을 확인해주세요.", details: parsed.error.flatten() });
+      const birth = parseFlexibleDate(birthDate);
+      const issue = parseFlexibleDate(issueDate);
+      if (!birth.ok) return res.status(400).json({ error: `생년월일 오류: ${birth.error}` });
+      if (!issue.ok) return res.status(400).json({ error: `발급일 오류: ${issue.error}` });
+
+      const phoneParsed = parsePhone(phone);
+      if (!phoneParsed.ok) return res.status(400).json({ error: `휴대폰번호 오류: ${phoneParsed.error}` });
+
+      // 사진이 첨부된 경우, DB에 저장하기 전에 먼저 매직바이트로 실제 이미지 형식인지 검증한다
+      // (확장자 위장 차단). 사진 자체는 선택 항목이므로 검증 실패해도 회원 등록은 막지 않는다.
+      let photoWarning: string | null = null;
+      if (req.file && !detectImageType(req.file.buffer)) {
+        photoWarning = "사진 파일이 손상되었거나 지원하지 않는 형식이라 등록되지 않았습니다.";
+      }
+
+      const existing = await pool.query(`SELECT 1 FROM members WHERE member_id = $1`, [memberId]);
+      if (existing.rows.length > 0) {
+        return res.status(409).json({ error: "이미 존재하는 회원번호입니다." });
+      }
+
+      const phoneOwner = await pool.query(`SELECT member_id FROM members WHERE phone = $1`, [phoneParsed.normalized]);
+      if (phoneOwner.rows.length > 0) {
+        return res.status(409).json({ error: `이미 다른 회원(${phoneOwner.rows[0].member_id})에게 등록된 휴대폰번호입니다.` });
+      }
+
+      await pool.query(
+        `INSERT INTO members (member_id, name, birth_date, issue_date, phone)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [memberId, name, birth.iso, issue.iso, phoneParsed.normalized]
+      );
+
+      await recordAudit({
+        adminId: req.session.auth!.id,
+        memberId,
+        action: "create",
+        newValue: { name, birthDate: birth.iso, issueDate: issue.iso, phone: phoneParsed.normalized },
+      });
+
+      if (req.file && !photoWarning) {
+        const relPath = await processAndStorePhoto(req.file.buffer, memberId);
+        await pool.query(`UPDATE members SET photo_path = $1 WHERE member_id = $2`, [relPath, memberId]);
+        await recordAudit({ adminId: req.session.auth!.id, memberId, action: "photo_update" });
+      }
+
+      res.status(201).json({ ok: true, memberId, photoWarning });
+    } catch (e) {
+      next(e);
     }
-    const { memberId, name, birthDate, issueDate, phone } = parsed.data;
-
-    const birth = parseFlexibleDate(birthDate);
-    const issue = parseFlexibleDate(issueDate);
-    if (!birth.ok) return res.status(400).json({ error: `생년월일 오류: ${birth.error}` });
-    if (!issue.ok) return res.status(400).json({ error: `발급일 오류: ${issue.error}` });
-
-    const phoneParsed = parsePhone(phone);
-    if (!phoneParsed.ok) return res.status(400).json({ error: `휴대폰번호 오류: ${phoneParsed.error}` });
-
-    // 사진이 첨부된 경우, DB에 저장하기 전에 먼저 매직바이트로 실제 이미지 형식인지 검증한다
-    // (확장자 위장 차단). 사진 자체는 선택 항목이므로 검증 실패해도 회원 등록은 막지 않는다.
-    let photoWarning: string | null = null;
-    if (req.file && !detectImageType(req.file.buffer)) {
-      photoWarning = "사진 파일이 손상되었거나 지원하지 않는 형식이라 등록되지 않았습니다.";
-    }
-
-    const existing = await pool.query(`SELECT 1 FROM members WHERE member_id = $1`, [memberId]);
-    if (existing.rows.length > 0) {
-      return res.status(409).json({ error: "이미 존재하는 회원번호입니다." });
-    }
-
-    const phoneOwner = await pool.query(`SELECT member_id FROM members WHERE phone = $1`, [phoneParsed.normalized]);
-    if (phoneOwner.rows.length > 0) {
-      return res.status(409).json({ error: `이미 다른 회원(${phoneOwner.rows[0].member_id})에게 등록된 휴대폰번호입니다.` });
-    }
-
-    await pool.query(
-      `INSERT INTO members (member_id, name, birth_date, issue_date, phone)
-       VALUES ($1, $2, $3, $4, $5)`,
-      [memberId, name, birth.iso, issue.iso, phoneParsed.normalized]
-    );
-
-    await recordAudit({
-      adminId: req.session.auth!.id,
-      memberId,
-      action: "create",
-      newValue: { name, birthDate: birth.iso, issueDate: issue.iso, phone: phoneParsed.normalized },
-    });
-
-    if (req.file && !photoWarning) {
-      const relPath = await processAndStorePhoto(req.file.buffer, memberId);
-      await pool.query(`UPDATE members SET photo_path = $1 WHERE member_id = $2`, [relPath, memberId]);
-      await recordAudit({ adminId: req.session.auth!.id, memberId, action: "photo_update" });
-    }
-
-    res.status(201).json({ ok: true, memberId, photoWarning });
   });
 });
 
