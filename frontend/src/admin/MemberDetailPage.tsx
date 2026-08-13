@@ -118,12 +118,53 @@ export default function MemberDetailPage() {
   }
 
   const photoInputRef = useRef<HTMLInputElement>(null);
+  const [photoCandidates, setPhotoCandidates] = useState<{ key: string }[] | null>(null);
+  const [loadingCandidates, setLoadingCandidates] = useState(false);
+  const [applyingCandidateKey, setApplyingCandidateKey] = useState<string | null>(null);
 
-  // "사진 등록" 클릭 시, 사진 일괄 업로드 화면에서 내보낸 "매칭실패 사진 폴더"가 기억되어
-  // 있으면 그 폴더를 기본 위치로 바로 열어준다. 지원 안 하는 브라우저면 기존 방식(숨겨진
-  // <input type="file"> 클릭)으로 그대로 대체한다.
+  // "사진 등록" 클릭 시, 먼저 이미 업로드되어 있는 사진 중 같은 이름의 파일이 있는지
+  // 검색해서 보여준다 (부서별로 정리된 원본 사진 등을 재활용). 검색 결과가 없거나
+  // 직접 선택하고 싶으면 아래 handlePhotoButtonClick으로 넘어간다.
+  async function openPhotoPicker() {
+    if (!detail) return;
+    setError(null);
+    setMessage(null);
+    setPhotoCandidates([]);
+    setLoadingCandidates(true);
+    try {
+      const res = await api.get<{ items: { key: string }[] }>(
+        `/admin/members/photo-candidates?name=${encodeURIComponent(detail.name)}`
+      );
+      setPhotoCandidates(res.items);
+    } catch {
+      setPhotoCandidates([]);
+    } finally {
+      setLoadingCandidates(false);
+    }
+  }
+
+  async function handleApplyCandidate(key: string) {
+    if (!memberId) return;
+    setError(null);
+    setApplyingCandidateKey(key);
+    try {
+      await api.post(`/admin/members/${memberId}/photo-from-r2`, { key });
+      setPhotoVersion((v) => v + 1);
+      setMessage("사진이 저장되었습니다.");
+      setPhotoCandidates(null);
+      await load();
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : "사진 적용 중 오류가 발생했습니다.");
+    } finally {
+      setApplyingCandidateKey(null);
+    }
+  }
+
+  // "매칭실패 사진 폴더"가 기억되어 있으면 그 폴더를 기본 위치로 바로 열어준다.
+  // 지원 안 하는 브라우저면 기존 방식(숨겨진 <input type="file"> 클릭)으로 대체한다.
   async function handlePhotoButtonClick(e: React.MouseEvent) {
     e.preventDefault();
+    setPhotoCandidates(null);
     try {
       const result = await pickPhotoFromUnmatchedFolder();
       if (!result.supported) {
@@ -177,7 +218,7 @@ export default function MemberDetailPage() {
 
           <button
             type="button"
-            onClick={handlePhotoButtonClick}
+            onClick={openPhotoPicker}
             disabled={uploadingPhoto}
             className="mt-3 w-full block text-center rounded-lg border border-slate-300 text-xs font-medium text-slate-600 px-3 py-2 cursor-pointer hover:bg-slate-50 disabled:opacity-50"
           >
@@ -194,6 +235,51 @@ export default function MemberDetailPage() {
               e.target.value = "";
             }}
           />
+
+          {photoCandidates !== null && (
+            <div className="mt-3 w-full bg-slate-50 border border-slate-200 rounded-lg p-3">
+              {loadingCandidates ? (
+                <p className="text-xs text-slate-400 text-center py-2">"{detail.name}" 이름으로 검색 중...</p>
+              ) : photoCandidates.length > 0 ? (
+                <>
+                  <p className="text-xs text-slate-500 mb-2">
+                    "{detail.name}" 이름의 업로드된 사진 {photoCandidates.length}개를 찾았습니다:
+                  </p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {photoCandidates.map((c) => (
+                      <button
+                        key={c.key}
+                        type="button"
+                        onClick={() => handleApplyCandidate(c.key)}
+                        disabled={applyingCandidateKey !== null}
+                        className="relative aspect-[3/4] rounded-md overflow-hidden border border-slate-300 hover:border-blue-500 disabled:opacity-50"
+                        title={c.key}
+                      >
+                        <img
+                          src={photoUrl(`/admin/members/photo-preview?key=${encodeURIComponent(c.key)}`)}
+                          className="w-full h-full object-cover"
+                        />
+                        {applyingCandidateKey === c.key && (
+                          <span className="absolute inset-0 bg-white/70 flex items-center justify-center text-[10px] text-slate-600">
+                            적용 중...
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <p className="text-xs text-slate-400 text-center py-2">일치하는 사진을 못 찾았습니다.</p>
+              )}
+              <button
+                type="button"
+                onClick={handlePhotoButtonClick}
+                className="mt-2 w-full text-center text-xs text-blue-600 underline py-1"
+              >
+                직접 파일 선택
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="col-span-2 bg-white rounded-xl shadow-sm p-5 space-y-4">

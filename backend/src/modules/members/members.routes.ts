@@ -4,7 +4,14 @@ import { z } from "zod";
 import { pool } from "../../db/pool";
 import { env } from "../../config/env";
 import { adminGuard } from "../../middleware/guards";
-import { streamPhotoOrDefault, processAndStorePhoto, deletePhotoFile } from "../photos/photos.service";
+import {
+  streamPhotoOrDefault,
+  processAndStorePhoto,
+  deletePhotoFile,
+  searchPhotoCandidatesByName,
+  streamRawR2Object,
+  processAndStorePhotoFromR2Key,
+} from "../photos/photos.service";
 import { detectImageType, ALLOWED_PHOTO_EXT } from "../photos/imageValidation";
 import { recordAudit } from "../audit/audit.service";
 import { parseFlexibleDate } from "../../utils/dateUtils";
@@ -38,6 +45,24 @@ membersRouter.get("/next-id", async (req, res) => {
   const year = new Date().getFullYear();
   const suggested = await suggestNextMemberId(year);
   res.json({ suggested });
+});
+
+// "/:memberId" 라우트보다 반드시 앞에 있어야 한다 — 안 그러면 "photo-candidates"가
+// memberId 파라미터로 잘못 매칭된다.
+// 회원 상세/신규 등록 화면의 "사진 등록"에서, R2에 이미 올라와 있는 사진 중 같은
+// 이름의 파일을 검색해 보여주기 위함 (부서별로 정리된 원본 사진 등을 재활용).
+membersRouter.get("/photo-candidates", async (req, res) => {
+  const name = typeof req.query.name === "string" ? req.query.name.trim() : "";
+  if (!name) return res.json({ items: [] });
+  const items = await searchPhotoCandidatesByName(name);
+  res.json({ items });
+});
+
+// 위 검색 결과를 실제로 화면에 미리보기로 보여주기 위한 원본 이미지 스트리밍(관리자 전용).
+membersRouter.get("/photo-preview", async (req, res) => {
+  const key = typeof req.query.key === "string" ? req.query.key : "";
+  if (!key) return res.status(400).json({ error: "key가 필요합니다." });
+  return streamRawR2Object(res, key);
 });
 
 membersRouter.get("/", async (req, res) => {
@@ -102,6 +127,32 @@ membersRouter.post("/:memberId/photo", (req, res, next) => {
       next(e);
     }
   });
+});
+
+const photoFromR2Schema = z.object({ key: z.string().min(1) });
+
+// "사진 등록" 화면에서 검색된 후보(R2에 이미 있는 사진) 중 하나를 회원 사진으로 확정한다.
+membersRouter.post("/:memberId/photo-from-r2", async (req, res) => {
+  const parsed = memberIdSchema.safeParse(req.params.memberId);
+  if (!parsed.success) return res.status(400).json({ error: "회원번호 형식이 올바르지 않습니다." });
+
+  const body = photoFromR2Schema.safeParse(req.body);
+  if (!body.success) return res.status(400).json({ error: "선택한 사진 정보가 올바르지 않습니다." });
+
+  const { rows } = await pool.query(`SELECT photo_path FROM members WHERE member_id = $1`, [parsed.data]);
+  if (!rows[0]) return res.status(404).json({ error: "회원을 찾을 수 없습니다." });
+
+  const relPath = await processAndStorePhotoFromR2Key(body.data.key, parsed.data);
+  await pool.query(`UPDATE members SET photo_path = $1 WHERE member_id = $2`, [relPath, parsed.data]);
+  await recordAudit({
+    adminId: req.session.auth!.id,
+    memberId: parsed.data,
+    action: "photo_update",
+    oldValue: { hadPhoto: !!rows[0].photo_path },
+    newValue: { hadPhoto: true, source: "r2_search", sourceKey: body.data.key },
+  });
+
+  res.json({ ok: true });
 });
 
 const createSchema = z.object({

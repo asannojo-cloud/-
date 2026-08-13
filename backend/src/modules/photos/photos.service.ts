@@ -2,8 +2,9 @@ import fs from "fs";
 import path from "path";
 import sharp from "sharp";
 import { Response } from "express";
-import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
 import { env } from "../../config/env";
+import { AppError } from "../../middleware/errorHandler";
 
 // Render 무료 플랜은 배포/재시작 때마다 로컬 디스크가 초기화되어, 로컬 파일로만 사진을
 // 저장하면 배포할 때마다 사진이 전부 사라지는 문제가 있었다 (2026-08-12 발견). R2 환경변수
@@ -120,4 +121,84 @@ export async function processAndStorePhoto(src: string | Buffer, memberId: strin
   const destPath = path.join(env.photoStorageDir, fileName);
   fs.writeFileSync(destPath, buffer);
   return fileName;
+}
+
+export function isR2Enabled(): boolean {
+  return r2Configured;
+}
+
+const IMAGE_EXT = new Set(["jpg", "jpeg", "png", "webp"]);
+// 우리가 자체적으로 저장한 최종 결과물 키(예: 2026-15.webp)는 "원본 후보"에서 제외한다.
+const OWN_PROCESSED_KEY = /^[0-9]{4}-[0-9]+\.webp$/i;
+
+// 파일명(부서 폴더 제외)에서 한글 이름으로 보이는 가장 긴 한글 연속 구간을 뽑아낸다.
+// 프론트엔드 PhotoBatchUploadPage.tsx의 extractNameToken과 동일한 로직.
+function extractNameToken(stem: string): string {
+  const matches = stem.match(/[가-힣]{2,5}/g);
+  if (!matches || matches.length === 0) return stem.trim();
+  return matches.reduce((a, b) => (b.length > a.length ? b : a));
+}
+
+/**
+ * R2 버킷 전체에서 파일명이 주어진 이름과 일치하는 사진 후보를 찾는다.
+ * (회원 상세 화면의 "사진 등록"에서 같은 이름의 기존 업로드 사진을 검색해 보여주기 위함.)
+ * R2가 설정되어 있지 않으면 빈 배열을 반환한다.
+ */
+export async function searchPhotoCandidatesByName(name: string): Promise<{ key: string }[]> {
+  if (!r2Configured) return [];
+  const target = name.trim();
+  if (!target) return [];
+
+  const results: { key: string }[] = [];
+  let token: string | undefined;
+  do {
+    const res = await s3!.send(new ListObjectsV2Command({ Bucket: env.r2.bucketName!, ContinuationToken: token }));
+    for (const obj of res.Contents ?? []) {
+      const key = obj.Key;
+      if (!key) continue;
+      const filename = key.split("/").pop() ?? key;
+      const ext = filename.split(".").pop()?.toLowerCase() ?? "";
+      if (!IMAGE_EXT.has(ext)) continue;
+      if (OWN_PROCESSED_KEY.test(filename)) continue;
+      const stem = filename.replace(/\.[^.]+$/, "");
+      if (extractNameToken(stem) === target) results.push({ key });
+    }
+    token = res.IsTruncated ? res.NextContinuationToken : undefined;
+  } while (token);
+
+  return results;
+}
+
+/** 검색 결과 미리보기용으로, R2 버킷의 원본 객체를 그대로 스트리밍한다 (관리자 전용). */
+export async function streamRawR2Object(res: Response, key: string) {
+  if (!r2Configured) return res.status(404).json({ error: "설정된 사진 저장소가 없습니다." });
+  try {
+    const obj = await s3!.send(new GetObjectCommand({ Bucket: env.r2.bucketName!, Key: key }));
+    res.setHeader("Cache-Control", "private, max-age=300");
+    res.setHeader("Content-Type", obj.ContentType ?? "application/octet-stream");
+    const body = obj.Body as NodeJS.ReadableStream | undefined;
+    if (!body) return res.status(404).json({ error: "사진을 찾을 수 없습니다." });
+    return body.pipe(res);
+  } catch {
+    return res.status(404).json({ error: "사진을 찾을 수 없습니다." });
+  }
+}
+
+/**
+ * 검색 결과 중 하나를 회원 사진으로 확정할 때 사용한다. R2의 원본 객체를 가져와
+ * processAndStorePhoto와 동일한 정규화 과정을 거쳐 회원번호 기준 파일로 다시 저장한다.
+ */
+export async function processAndStorePhotoFromR2Key(sourceKey: string, memberId: string): Promise<string> {
+  if (!r2Configured) {
+    throw new AppError(400, "사진 저장소(R2)가 설정되어 있지 않아 이 기능을 사용할 수 없습니다.");
+  }
+  const obj = await s3!.send(new GetObjectCommand({ Bucket: env.r2.bucketName!, Key: sourceKey }));
+  const body = obj.Body as NodeJS.ReadableStream | undefined;
+  if (!body) throw new AppError(404, "원본 사진을 찾을 수 없습니다.");
+
+  const chunks: Buffer[] = [];
+  for await (const chunk of body) chunks.push(Buffer.from(chunk as Buffer));
+  const buffer = Buffer.concat(chunks);
+
+  return processAndStorePhoto(buffer, memberId);
 }
