@@ -1,7 +1,8 @@
-import { useState, useEffect, type FormEvent } from "react";
+import { useState, useEffect, useRef, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { api, ApiError } from "../shared/api";
 import DateInput from "../shared/DateInput";
+import { pickPhotoFromUnmatchedFolder } from "../shared/unmatchedFolder";
 
 export default function MemberNewPage() {
   const navigate = useNavigate();
@@ -15,6 +16,24 @@ export default function MemberNewPage() {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<{ photoWarning: string | null } | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const photoInputRef = useRef<HTMLInputElement>(null);
+
+  // "파일 선택" 클릭 시, 사진 일괄 업로드 화면에서 내보낸 "매칭실패 사진 폴더"가 기억되어
+  // 있으면 그 폴더를 기본 위치로 바로 열어준다. 지원 안 하는 브라우저면 기존 방식(숨겨진
+  // <input type="file"> 클릭)으로 그대로 대체한다.
+  async function handlePhotoButtonClick(e: React.MouseEvent) {
+    e.preventDefault();
+    try {
+      const result = await pickPhotoFromUnmatchedFolder();
+      if (!result.supported) {
+        photoInputRef.current?.click();
+        return;
+      }
+      if (result.file) setPhoto(result.file);
+    } catch {
+      photoInputRef.current?.click();
+    }
+  }
 
   useEffect(() => {
     if (!photo) {
@@ -130,15 +149,20 @@ export default function MemberNewPage() {
                 className="w-16 aspect-[3/4] object-cover rounded-lg border border-slate-200"
               />
             )}
-            <label className="rounded-lg border border-slate-300 text-sm font-medium text-slate-600 px-4 py-2 cursor-pointer hover:bg-slate-50">
+            <button
+              type="button"
+              onClick={handlePhotoButtonClick}
+              className="rounded-lg border border-slate-300 text-sm font-medium text-slate-600 px-4 py-2 cursor-pointer hover:bg-slate-50"
+            >
               {photo ? "다른 파일 선택" : "파일 선택"}
-              <input
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                onChange={(e) => setPhoto(e.target.files?.[0] ?? null)}
-                className="hidden"
-              />
-            </label>
+            </button>
+            <input
+              ref={photoInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={(e) => setPhoto(e.target.files?.[0] ?? null)}
+              className="hidden"
+            />
             {photo && <span className="text-xs text-slate-500 truncate max-w-[10rem]">{photo.name}</span>}
           </div>
         </Field>

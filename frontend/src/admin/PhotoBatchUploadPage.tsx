@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { api, ApiError } from "../shared/api";
+import { saveUnmatchedFolderHandle } from "../shared/unmatchedFolder";
 
 interface MemberRow {
   member_id: string;
@@ -199,6 +200,9 @@ export default function PhotoBatchUploadPage() {
     setExportNotice(null);
     try {
       const dirHandle = await picker();
+      // 이 폴더 위치를 기억해뒀다가, 회원 상세/신규 등록 화면의 "사진 등록"에서
+      // 기본으로 열리는 폴더로 다시 사용한다.
+      await saveUnmatchedFolderHandle(dirHandle);
       const usedNames = new Set<string>();
       for (const m of targets) {
         let name = m.file.name;
@@ -218,7 +222,9 @@ export default function PhotoBatchUploadPage() {
         await writable.write(m.file);
         await writable.close();
       }
-      setExportNotice(`반영되지 못한 사진 ${targets.length}장을 폴더에 저장했습니다.`);
+      setExportNotice(
+        `반영되지 못한 사진 ${targets.length}장을 폴더에 저장했습니다. 이제 회원관리 > 사진 등록에서 이 폴더를 바로 열 수 있습니다.`
+      );
     } catch (e) {
       // 사용자가 폴더 선택을 취소한 경우도 이 catch를 타는데, 그건 오류가 아니므로 조용히 넘어간다.
       if (e instanceof DOMException && e.name === "AbortError") {

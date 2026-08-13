@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { api, ApiError, photoUrl } from "../shared/api";
 import DateInput from "../shared/DateInput";
+import { pickPhotoFromUnmatchedFolder } from "../shared/unmatchedFolder";
 
 interface MemberDetail {
   member_id: string;
@@ -116,6 +117,29 @@ export default function MemberDetailPage() {
     }
   }
 
+  const photoInputRef = useRef<HTMLInputElement>(null);
+
+  // "사진 등록" 클릭 시, 사진 일괄 업로드 화면에서 내보낸 "매칭실패 사진 폴더"가 기억되어
+  // 있으면 그 폴더를 기본 위치로 바로 열어준다. 지원 안 하는 브라우저면 기존 방식(숨겨진
+  // <input type="file"> 클릭)으로 그대로 대체한다.
+  async function handlePhotoButtonClick(e: React.MouseEvent) {
+    e.preventDefault();
+    try {
+      const result = await pickPhotoFromUnmatchedFolder();
+      if (!result.supported) {
+        photoInputRef.current?.click();
+        return;
+      }
+      if (result.file) {
+        await handlePhotoSelect(result.file);
+      }
+      // result.file === null 이면 사용자가 취소한 것이므로 아무것도 하지 않는다.
+    } catch {
+      // 폴더 접근 권한 문제 등 예상 못한 오류가 나면 기존 방식으로 대체한다.
+      photoInputRef.current?.click();
+    }
+  }
+
   if (!detail) return <p className="text-slate-400">불러오는 중...</p>;
 
   return (
@@ -151,21 +175,25 @@ export default function MemberDetailPage() {
             )}
           </div>
 
-          <label className="mt-3 w-full">
-            <span className="block w-full text-center rounded-lg border border-slate-300 text-xs font-medium text-slate-600 px-3 py-2 cursor-pointer hover:bg-slate-50">
-              {uploadingPhoto ? "업로드 중..." : detail.has_photo ? "사진 교체" : "사진 등록"}
-            </span>
-            <input
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              className="hidden"
-              disabled={uploadingPhoto}
-              onChange={(e) => {
-                handlePhotoSelect(e.target.files?.[0] ?? null);
-                e.target.value = "";
-              }}
-            />
-          </label>
+          <button
+            type="button"
+            onClick={handlePhotoButtonClick}
+            disabled={uploadingPhoto}
+            className="mt-3 w-full block text-center rounded-lg border border-slate-300 text-xs font-medium text-slate-600 px-3 py-2 cursor-pointer hover:bg-slate-50 disabled:opacity-50"
+          >
+            {uploadingPhoto ? "업로드 중..." : detail.has_photo ? "사진 교체" : "사진 등록"}
+          </button>
+          <input
+            ref={photoInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            className="hidden"
+            disabled={uploadingPhoto}
+            onChange={(e) => {
+              handlePhotoSelect(e.target.files?.[0] ?? null);
+              e.target.value = "";
+            }}
+          />
         </div>
 
         <div className="col-span-2 bg-white rounded-xl shadow-sm p-5 space-y-4">
