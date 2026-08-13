@@ -64,6 +64,31 @@ export function createApp() {
 
   app.get("/api/health", (req, res) => res.json({ ok: true }));
 
+  // TEMP DEBUG (2026-08-13): 방금 업로드한 사진이 GET에서만 404가 나는 원인 진단용.
+  app.get("/api/_debug/r2get", async (req, res) => {
+    const key = String(req.query.key ?? "2026-1.webp");
+    const out: Record<string, unknown> = {
+      accountId: env.r2.accountId ?? null,
+      bucketName: env.r2.bucketName ?? null,
+      accessKeyIdLength: env.r2.accessKeyId?.length ?? 0,
+      secretAccessKeyLength: env.r2.secretAccessKey?.length ?? 0,
+      key,
+    };
+    try {
+      const { S3Client, GetObjectCommand } = await import("@aws-sdk/client-s3");
+      const s3 = new S3Client({
+        region: "auto",
+        endpoint: `https://${env.r2.accountId}.r2.cloudflarestorage.com`,
+        credentials: { accessKeyId: env.r2.accessKeyId!, secretAccessKey: env.r2.secretAccessKey! },
+      });
+      const obj = await s3.send(new GetObjectCommand({ Bucket: env.r2.bucketName!, Key: key }));
+      out.result = { ok: true, contentType: obj.ContentType, length: obj.ContentLength };
+    } catch (e) {
+      out.result = { ok: false, error: e instanceof Error ? { message: e.message, name: e.name } : String(e) };
+    }
+    res.json(out);
+  });
+
   app.use("/api/member/login", loginRateLimiter);
   app.use("/api/member", memberAuthRouter);
 
