@@ -76,7 +76,7 @@ export function createApp() {
     try {
       const { processAndStorePhoto } = await import("./modules/photos/photos.service");
       const tinyPng = Buffer.from(
-        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
         "base64"
       );
       const key = await processAndStorePhoto(tinyPng, "debugcheck");
