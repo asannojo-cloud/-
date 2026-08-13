@@ -7,6 +7,7 @@ interface MemberSessionValue {
   login: (name: string, phone: string) => Promise<void>;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
+  photoNonce: number;
 }
 
 const MemberSessionContext = createContext<MemberSessionValue | null>(null);

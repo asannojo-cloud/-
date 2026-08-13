@@ -6,7 +6,7 @@ function formatDate(iso: string): string {
 }
 
 export default function MemberCardPage() {
-  const { member } = useMemberSessionContext();
+  const { member, photoNonce } = useMemberSessionContext();
   if (!member) return null;
 
   return (
@@ -18,7 +18,8 @@ export default function MemberCardPage() {
         <div className="w-40 aspect-[3/4] rounded-xl overflow-hidden bg-slate-100 border border-slate-200 flex items-center justify-center">
           {member.hasPhoto ? (
             <img
-              src={photoUrl("/member/me/photo")}
+              key={photoNonce}
+              src={`${photoUrl("/member/me/photo")}?v=${photoNonce}`}
               alt="회원 사진"
               className="w-full h-full object-cover"
             />
