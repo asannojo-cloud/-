@@ -8,7 +8,7 @@ export default function MemberHelpPage() {
       </div>
 
       <a
-        href="tel:540-2667"
+        href="tel:041-540-2667"
         className="mt-3 flex items-center gap-3 bg-white rounded-2xl shadow-sm p-5 active:bg-slate-50"
       >
         <span className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-blue-700 shrink-0">
@@ -18,7 +18,7 @@ export default function MemberHelpPage() {
         </span>
         <span>
           <span className="block text-xs text-slate-400">문의전화</span>
-          <span className="block text-base font-semibold text-slate-900">540-2667</span>
+          <span className="block text-base font-semibold text-slate-900">041-540-2667</span>
         </span>
       </a>
     </div>
