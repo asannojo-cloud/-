@@ -28,6 +28,8 @@ export function usePasteImage(onImage: (file: File) => void, enabled: boolean = 
           return;
         }
       }
+      // 이미지가 아니면(예: 다른 입력칸에 텍스트를 붙여넣는 평범한 경우) 손대지 않고
+      // 그대로 흘려보낸다 — 여기서 막아버리면 페이지 전체의 텍스트 붙여넣기가 깨진다.
     }
 
     document.addEventListener("paste", handlePaste);

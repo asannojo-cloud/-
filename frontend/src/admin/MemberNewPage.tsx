@@ -188,7 +188,7 @@ export default function MemberNewPage() {
         <Field label="발급일">
           <DateInput value={issueDate} onChange={setIssueDate} required />
         </Field>
-        <Field label="회원 사진 (선택, JPG/PNG/WEBP · 복사한 이미지를 Ctrl+V로 붙여넣기도 가능)">
+        <Field label="회원 사진 (선택, JPG/PNG/WEBP)">
           <div className="flex items-center gap-3 flex-wrap">
             {photoPreviewUrl && (
               <img
@@ -220,6 +220,17 @@ export default function MemberNewPage() {
               className="hidden"
             />
             {photo && <span className="text-xs text-slate-500 truncate max-w-[10rem]">{photo.name}</span>}
+          </div>
+
+          {/* contentEditable이라 우클릭 시 브라우저가 "붙여넣기" 메뉴를 띄워준다.
+              실제 텍스트 삽입은 onPaste에서 막고, 이미지 처리는 usePasteImage(document 리스너)가 담당한다. */}
+          <div
+            contentEditable
+            suppressContentEditableWarning
+            onPaste={(e) => e.preventDefault()}
+            className="mt-2 text-[11px] text-slate-400 border border-dashed border-slate-300 rounded-md px-2 py-1.5 cursor-text outline-none focus:border-blue-400 inline-block"
+          >
+            여기를 우클릭하거나 Ctrl+V로 이미지 붙여넣기
           </div>
 
           {photoCandidates !== null && (

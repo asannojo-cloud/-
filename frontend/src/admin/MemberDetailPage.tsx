@@ -229,7 +229,16 @@ export default function MemberDetailPage() {
           >
             {uploadingPhoto ? "업로드 중..." : detail.has_photo ? "사진 교체" : "사진 등록"}
           </button>
-          <p className="mt-1.5 text-[11px] text-slate-400 text-center">복사한 이미지를 Ctrl+V로 붙여넣어도 됩니다</p>
+          {/* contentEditable이라 우클릭 시 브라우저가 "붙여넣기" 메뉴를 띄워준다.
+              실제 텍스트 삽입은 onPaste에서 막고, 이미지 처리는 usePasteImage(document 리스너)가 담당한다. */}
+          <div
+            contentEditable
+            suppressContentEditableWarning
+            onPaste={(e) => e.preventDefault()}
+            className="mt-1.5 text-[11px] text-slate-400 text-center border border-dashed border-slate-300 rounded-md px-2 py-1.5 cursor-text outline-none focus:border-blue-400"
+          >
+            여기를 우클릭하거나 Ctrl+V로 이미지 붙여넣기
+          </div>
           <input
             ref={photoInputRef}
             type="file"
