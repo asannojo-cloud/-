@@ -64,33 +64,6 @@ export function createApp() {
 
   app.get("/api/health", (req, res) => res.json({ ok: true }));
 
-  // TEMP DEBUG (2026-08-13): R2 사진 저장소 연결 문제 진단용. 확인 후 반드시 제거할 것.
-  app.get("/api/_debug/r2check", async (req, res) => {
-    const out: Record<string, unknown> = {
-      hasAccountId: !!env.r2.accountId,
-      hasAccessKeyId: !!env.r2.accessKeyId,
-      hasSecretAccessKey: !!env.r2.secretAccessKey,
-      hasBucketName: !!env.r2.bucketName,
-      bucketName: env.r2.bucketName ?? null,
-      // Account ID는 비밀값이 아니라(엔드포인트 URL의 일부로 어차피 노출됨) 진단을 위해 그대로 보여준다.
-      accountId: env.r2.accountId ?? null,
-      accessKeyIdLength: env.r2.accessKeyId?.length ?? 0,
-      secretAccessKeyLength: env.r2.secretAccessKey?.length ?? 0,
-    };
-    try {
-      const { processAndStorePhoto } = await import("./modules/photos/photos.service");
-      const tinyPng = Buffer.from(
-        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
-        "base64"
-      );
-      const key = await processAndStorePhoto(tinyPng, "debugcheck");
-      out.putResult = { ok: true, key };
-    } catch (e) {
-      out.putResult = { ok: false, error: e instanceof Error ? { message: e.message, name: e.name, stack: e.stack } : String(e) };
-    }
-    res.json(out);
-  });
-
   app.use("/api/member/login", loginRateLimiter);
   app.use("/api/member", memberAuthRouter);
 
