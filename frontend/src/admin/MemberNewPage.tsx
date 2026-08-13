@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { api, ApiError, photoUrl } from "../shared/api";
 import DateInput from "../shared/DateInput";
 import { pickPhotoFromUnmatchedFolder } from "../shared/unmatchedFolder";
+import { usePasteImage } from "../shared/usePasteImage";
 
 export default function MemberNewPage() {
   const navigate = useNavigate();
@@ -20,6 +21,12 @@ export default function MemberNewPage() {
   const [photoCandidates, setPhotoCandidates] = useState<{ key: string }[] | null>(null);
   const [loadingCandidates, setLoadingCandidates] = useState(false);
   const [applyingCandidateKey, setApplyingCandidateKey] = useState<string | null>(null);
+
+  // 이 화면을 보고 있는 동안 클립보드에 복사된 이미지를 Ctrl+V로 바로 첨부할 수 있게 한다.
+  usePasteImage((file) => {
+    setPhoto(file);
+    setPhotoCandidates(null);
+  });
 
   // "파일 선택" 클릭 시, 사진 일괄 업로드 화면에서 내보낸 "매칭실패 사진 폴더"가 기억되어
   // 있으면 그 폴더를 기본 위치로 바로 열어준다. 지원 안 하는 브라우저면 기존 방식(숨겨진
@@ -181,7 +188,7 @@ export default function MemberNewPage() {
         <Field label="발급일">
           <DateInput value={issueDate} onChange={setIssueDate} required />
         </Field>
-        <Field label="회원 사진 (선택, JPG/PNG/WEBP)">
+        <Field label="회원 사진 (선택, JPG/PNG/WEBP · 복사한 이미지를 Ctrl+V로 붙여넣기도 가능)">
           <div className="flex items-center gap-3 flex-wrap">
             {photoPreviewUrl && (
               <img

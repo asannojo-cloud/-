@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { api, ApiError, photoUrl } from "../shared/api";
 import DateInput from "../shared/DateInput";
 import { pickPhotoFromUnmatchedFolder } from "../shared/unmatchedFolder";
+import { usePasteImage } from "../shared/usePasteImage";
 
 interface MemberDetail {
   member_id: string;
@@ -98,10 +99,16 @@ export default function MemberDetailPage() {
     }
   }
 
+  const photoInputRef = useRef<HTMLInputElement>(null);
+  const [photoCandidates, setPhotoCandidates] = useState<{ key: string }[] | null>(null);
+  const [loadingCandidates, setLoadingCandidates] = useState(false);
+  const [applyingCandidateKey, setApplyingCandidateKey] = useState<string | null>(null);
+
   async function handlePhotoSelect(file: File | null) {
     if (!file || !memberId) return;
     setError(null);
     setMessage(null);
+    setPhotoCandidates(null);
     setUploadingPhoto(true);
     try {
       const form = new FormData();
@@ -117,10 +124,8 @@ export default function MemberDetailPage() {
     }
   }
 
-  const photoInputRef = useRef<HTMLInputElement>(null);
-  const [photoCandidates, setPhotoCandidates] = useState<{ key: string }[] | null>(null);
-  const [loadingCandidates, setLoadingCandidates] = useState(false);
-  const [applyingCandidateKey, setApplyingCandidateKey] = useState<string | null>(null);
+  // 이 화면을 보고 있는 동안 클립보드에 복사된 이미지를 Ctrl+V로 바로 등록할 수 있게 한다.
+  usePasteImage(handlePhotoSelect, !!detail && !uploadingPhoto);
 
   // "사진 등록" 클릭 시, 먼저 이미 업로드되어 있는 사진 중 같은 이름의 파일이 있는지
   // 검색해서 보여준다 (부서별로 정리된 원본 사진 등을 재활용). 검색 결과가 없거나
@@ -224,6 +229,7 @@ export default function MemberDetailPage() {
           >
             {uploadingPhoto ? "업로드 중..." : detail.has_photo ? "사진 교체" : "사진 등록"}
           </button>
+          <p className="mt-1.5 text-[11px] text-slate-400 text-center">복사한 이미지를 Ctrl+V로 붙여넣어도 됩니다</p>
           <input
             ref={photoInputRef}
             type="file"
