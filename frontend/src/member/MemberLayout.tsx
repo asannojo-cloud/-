@@ -4,7 +4,7 @@ import { useMemberSessionContext } from "./MemberSessionContext";
 const tabs = [
   { to: "/member/card", label: "조합원증" },
   { to: "/member/info", label: "내 정보" },
-  { to: "/member/help", label: "안내" },
+  { to: "/member/help", label: "협약 및 차량 사업" },
 ];
 
 export default function MemberLayout() {
