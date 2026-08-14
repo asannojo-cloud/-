@@ -9,15 +9,10 @@ const MEMBER_SERVICES = [
 export default function MemberHelpPage() {
   return (
     <div className="px-6 pt-8 max-w-sm mx-auto text-sm text-slate-600 leading-relaxed">
-      <h2 className="text-lg font-bold text-slate-900 mb-4">협약 및 차량 사업</h2>
-      <div className="bg-white rounded-2xl shadow-sm p-5 space-y-3">
-        <p>본 모바일 조합원증은 아산시공무원노동조합 조합원 본인만 조회할 수 있습니다.</p>
-        <p>회원정보(이름, 생년월일, 사진 등)에 변경이 필요하거나 로그인이 되지 않는 경우 아래 번호로 문의해주세요.</p>
-      </div>
+      <h2 className="text-lg font-bold text-slate-900 mb-4">차량대여사업</h2>
 
       {MEMBER_SERVICES.length > 0 && (
         <>
-          <h3 className="text-sm font-bold text-slate-700 mt-6 mb-2 px-1">조합원 서비스</h3>
           <div className="space-y-2">
             {MEMBER_SERVICES.map((service) => (
               <a

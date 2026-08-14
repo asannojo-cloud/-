@@ -3,8 +3,9 @@ import { MemberSessionProvider } from "./member/MemberSessionContext";
 import MemberLoginPage from "./member/MemberLoginPage";
 import MemberLayout from "./member/MemberLayout";
 import MemberCardPage from "./member/MemberCardPage";
-import MemberInfoPage from "./member/MemberInfoPage";
+import MemberPartnersPage from "./member/MemberPartnersPage";
 import MemberHelpPage from "./member/MemberHelpPage";
+import MemberMutualAidPage from "./member/MemberMutualAidPage";
 
 import { AdminSessionProvider } from "./admin/AdminSessionContext";
 import AdminLoginPage from "./admin/AdminLoginPage";
@@ -31,8 +32,9 @@ export default function App() {
               <Route path="login" element={<MemberLoginPage />} />
               <Route element={<MemberLayout />}>
                 <Route path="card" element={<MemberCardPage />} />
-                <Route path="info" element={<MemberInfoPage />} />
+                <Route path="partners" element={<MemberPartnersPage />} />
                 <Route path="help" element={<MemberHelpPage />} />
+                <Route path="mutual-aid" element={<MemberMutualAidPage />} />
               </Route>
               <Route path="*" element={<Navigate to="/member/card" replace />} />
             </Routes>
