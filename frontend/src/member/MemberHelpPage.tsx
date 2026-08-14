@@ -5,7 +5,7 @@ const MEMBER_SERVICES = [
     url: "https://asan-union-partners.onrender.com/search",
   },
   {
-    label: "아산시공무원노동조합 차량대여사업",
+    label: "차량대여사업",
     url: "https://asanvehicle-fwznm5ba.manus.space/",
   },
 ];
@@ -13,7 +13,7 @@ const MEMBER_SERVICES = [
 export default function MemberHelpPage() {
   return (
     <div className="px-6 pt-8 max-w-sm mx-auto text-sm text-slate-600 leading-relaxed">
-      <h2 className="text-lg font-bold text-slate-900 mb-4">협약기관 및 차량대여</h2>
+      <h2 className="text-lg font-bold text-slate-900 mb-4">조합원복지사업</h2>
 
       <div className="space-y-2">
         {MEMBER_SERVICES.map((service) => (

@@ -3,7 +3,7 @@ import { useMemberSessionContext } from "./MemberSessionContext";
 
 const tabs = [
   { to: "/member/card", label: "조합원증" },
-  { to: "/member/help", label: "협약기관 및 차량대여" },
+  { to: "/member/help", label: "조합원복지사업" },
   { to: "/member/mutual-aid", label: "상조서비스" },
 ];
 
