@@ -236,10 +236,13 @@ export default function MemberDetailPage() {
                 key={photoVersion}
                 contentEditable={false}
                 src={`${photoUrl(`/admin/members/${detail.member_id}/photo`)}?v=${photoVersion}`}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover pointer-events-none"
               />
             ) : (
-              <div contentEditable={false} className="w-full h-full flex items-center justify-center text-xs text-slate-400">
+              // contentEditable={false}를 주지 않는다 — 주면 이 영역이 별도의 "편집 불가 섬"으로
+              // 취급되어, 사진이 없을 때 이 글자 위를 우클릭해도 브라우저가 "붙여넣기" 메뉴를
+              // 안 띄워주는 문제가 있었다(부모는 편집 가능해도 실제 클릭 지점은 이 자식이라).
+              <div className="w-full h-full flex items-center justify-center text-xs text-slate-400 pointer-events-none">
                 사진 없음
               </div>
             )}
