@@ -164,6 +164,9 @@ export default function MemberMutualAidPage() {
               <p className="font-medium text-slate-800">나. 아공노 상조지원서비스</p>
               <p className="mt-1 pl-3 text-slate-600">1) 10만원 또는 상조물품 2박스 중 선택</p>
             </div>
+            <div>
+              <p className="font-medium text-slate-800">다. 조기 대여</p>
+            </div>
           </div>
         </div>
       </div>
