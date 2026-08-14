@@ -15,56 +15,106 @@ function ChevronIcon({ open }: { open: boolean }) {
   );
 }
 
-const FUNERAL_STEPS = [
-  { title: "장례발생", desc: "365일 24시간 상황실 세부사항 접수" },
-  { title: "장례접수", desc: "대표번호 1800-4446" },
-  { title: "장례지도사 출동", desc: "2시간 이내 출동 및 조사용품 배송" },
-  { title: "장례상담", desc: "장례진행 절차안내, 예법 상세안내" },
-  { title: "장례진행", desc: "장례진행 임직원과 협의" },
-  { title: "장례종료", desc: "장례비용 정산, 행정절차 안내" },
+const USAGE_STEPS = [
+  "임종시 1800-4446 (장례희망 24시간 콜센터 연락)",
+  "아산시청 장례서비스 이용 신청 및 지원내용 협의 (장례 준비단계에 신청해야 원활한 지원가능)",
+  "고객 지정 장소로 장례지도사가 최장 2시간 이내 긴급 출동(전국 가능, 제주도 포함)",
+  "지원 후, '장례서비스 제공 확인서' 내용 확인 후 서명",
+];
+
+// 대체서비스: 장례도우미를 몇 명 이용하느냐에 따라 그 차액만큼 아래 항목 중 하나를 고를 수 있다.
+const ALT_SERVICE_GROUPS = [
+  {
+    title: "장례도우미 4명 중 3명만 이용하는 경우 (항목 중 택1)",
+    options: ["근조 화환 바구니 (2EA)", "근조 3단 꽃 화환", "빈소용품 (위패, 혼백, 예단, 향, 초 등)", "접대용품 100인분 추가"],
+  },
+  {
+    title: "장례도우미 4명 중 2명만 이용하는 경우 (항목 중 택1)",
+    options: ["관내 이송 차량 지원 (고인운구)", "근조 3단 꽃 화환, 헌화 50송이", "저마 가진수의", "접대용품 200인분 추가"],
+  },
+  {
+    title: "장례도우미 4명 중 1명만 이용하는 경우 (항목 중 택1)",
+    options: ["고급 진공 유골함", "대마 가진수의"],
+  },
+  {
+    title: "장례도우미 이용 안 하는 경우 (항목 중 택1)",
+    options: ["장의차량 (5인승 고급리무진, 편도 150km)", "장의차량 (35인승 이상 장의버스, 왕복 150km)"],
+  },
 ];
 
 function CityFuneralServiceDetail() {
   return (
     <div className="mt-3 pt-3 border-t border-slate-100 space-y-4 text-xs">
-      <p className="text-center font-bold text-slate-800 text-sm">장례 무료서비스 지원 안내문</p>
+      <p className="text-center font-bold text-slate-800 text-sm">2026년 아산시 직원 장례서비스 지원사업 운영 안내</p>
 
       <div className="space-y-2">
-        <InfoLine label="서비스대상" value="아산시 소속 임직원 본인, 배우자, 자녀, 부모(배우자 부모 포함)" />
-        <InfoLine label="지원내용" value="접객용품 및 장례도우미, 장례용품, 상조서비스 제공" />
-        <InfoLine label="이용방법" value="아산시청 직원임을 밝히고 접수" />
+        <InfoLine label="대상" value="아산시 소속 직원 (공무원, 공무직, 시의원, 실무수습, 청원경찰, 1년 이상 기간제, 공중보건의, 시립합창단원 등)" />
+        <InfoLine label="기간" value="2026.1.1. ~ 2026.12.31." />
+        <InfoLine
+          label="지원범위"
+          value="본인, 배우자, 자녀, 부모(배우자의 부모 포함) — 단일 지원대상 장례에 지원대상자가 복수일 경우 중복지원 불가"
+        />
+        <InfoLine label="운영업체" value="장례희망" />
       </div>
 
       <a
         href="tel:1800-4446"
         className="block text-center bg-amber-50 border border-amber-200 rounded-lg py-2 text-amber-700 font-semibold"
       >
-        대표번호 1800-4446
+        임종시 연락 · 1800-4446 (24시간 콜센터)
       </a>
 
       <div>
-        <p className="font-bold text-slate-700 mb-2">진행 절차</p>
+        <p className="font-bold text-slate-700 mb-2">이용방법</p>
         <div className="space-y-2">
-          {FUNERAL_STEPS.map((step, i) => (
-            <div key={step.title} className="flex gap-2">
+          {USAGE_STEPS.map((step, i) => (
+            <div key={i} className="flex gap-2">
               <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-700 font-bold">
                 {i + 1}
               </span>
-              <p>
-                <span className="font-medium text-slate-800">{step.title}</span>
-                <span className="text-slate-500"> — {step.desc}</span>
-              </p>
+              <p className="text-slate-600">{step}</p>
             </div>
           ))}
         </div>
+        <p className="mt-2 font-bold text-red-500">
+          ※ "신청주의"로 장례 이후 소급하여 지원불가
+        </p>
       </div>
 
       <div>
-        <p className="font-bold text-slate-700 mb-1.5">비용절감 혜택</p>
-        <ul className="list-disc pl-4 space-y-1 text-slate-600">
-          <li>협력 장례식장 감면</li>
-          <li>아산시청 상조 제휴가 진행</li>
-        </ul>
+        <p className="font-bold text-slate-700 mb-1">지원내용</p>
+        <p className="text-slate-400 mb-2">※ 지원내용의 금액은 총무과에서 상조업체로 지급합니다.</p>
+
+        <div className="space-y-3">
+          <div>
+            <p className="font-semibold text-slate-700 mb-1">기본 서비스</p>
+            <ul className="list-disc pl-4 space-y-1 text-slate-600">
+              <li>장례지도사 1명 이용 / 장례운영상담, 장례예법, 제례안내</li>
+              <li>접대용품(식기, 접시, 수저, 젓가락 등) 200인분 지원</li>
+            </ul>
+          </div>
+          <div>
+            <p className="font-semibold text-slate-700 mb-1">선택서비스</p>
+            <ul className="list-disc pl-4 space-y-1 text-slate-600">
+              <li>장례도우미 4명 이용 — 2일×2명 또는 1일×4명 (1일 10시간 기준)</li>
+            </ul>
+          </div>
+          <div>
+            <p className="font-semibold text-slate-700 mb-1.5">대체서비스</p>
+            <div className="space-y-2.5">
+              {ALT_SERVICE_GROUPS.map((group) => (
+                <div key={group.title}>
+                  <p className="text-slate-500 mb-1">{group.title}</p>
+                  <ul className="list-disc pl-4 space-y-0.5 text-slate-600">
+                    {group.options.map((opt) => (
+                      <li key={opt}>{opt}</li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -73,7 +123,7 @@ function CityFuneralServiceDetail() {
 function InfoLine({ label, value }: { label: string; value: string }) {
   return (
     <p>
-      <span className="inline-block px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 font-medium mr-1.5">{label}</span>
+      <span className="inline-block px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 font-medium mr-1.5 align-top">{label}</span>
       <span className="text-slate-600">{value}</span>
     </p>
   );
