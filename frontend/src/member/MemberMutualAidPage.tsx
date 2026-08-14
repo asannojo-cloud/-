@@ -172,20 +172,36 @@ export default function MemberMutualAidPage() {
       </div>
 
       <h3 className="text-sm font-bold text-slate-700 mt-6 mb-2 px-1">문의</h3>
-      <a
-        href="tel:041-540-2667"
-        className="flex items-center gap-3 bg-white rounded-2xl shadow-sm p-5 active:bg-slate-50"
-      >
-        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-blue-700 shrink-0">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
-            <path d="M6.62 10.79a15.05 15.05 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1.01-.24c1.12.37 2.33.57 3.58.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1C10.61 21 3 13.39 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.46.57 3.58a1 1 0 0 1-.25 1.01l-2.2 2.2Z" />
-          </svg>
-        </span>
-        <span>
-          <span className="block text-xs text-slate-400">문의전화</span>
-          <span className="block text-base font-semibold text-slate-900">041-540-2667</span>
-        </span>
-      </a>
+      <div className="space-y-2">
+        <a
+          href="tel:041-540-2667"
+          className="flex items-center gap-3 bg-white rounded-2xl shadow-sm p-5 active:bg-slate-50"
+        >
+          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-blue-700 shrink-0">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
+              <path d="M6.62 10.79a15.05 15.05 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1.01-.24c1.12.37 2.33.57 3.58.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1C10.61 21 3 13.39 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.46.57 3.58a1 1 0 0 1-.25 1.01l-2.2 2.2Z" />
+            </svg>
+          </span>
+          <span>
+            <span className="block text-xs text-slate-400">노동조합 문의전화</span>
+            <span className="block text-base font-semibold text-slate-900">041-540-2667</span>
+          </span>
+        </a>
+        <a
+          href="tel:041-540-5225"
+          className="flex items-center gap-3 bg-white rounded-2xl shadow-sm p-5 active:bg-slate-50"
+        >
+          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-blue-700 shrink-0">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
+              <path d="M6.62 10.79a15.05 15.05 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1.01-.24c1.12.37 2.33.57 3.58.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1C10.61 21 3 13.39 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.46.57 3.58a1 1 0 0 1-.25 1.01l-2.2 2.2Z" />
+            </svg>
+          </span>
+          <span>
+            <span className="block text-xs text-slate-400">총무과 문의전화</span>
+            <span className="block text-base font-semibold text-slate-900">041-540-5225</span>
+          </span>
+        </a>
+      </div>
     </div>
   );
 }
