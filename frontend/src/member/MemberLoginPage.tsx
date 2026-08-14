@@ -73,6 +73,13 @@ export default function MemberLoginPage() {
             등록하신 이름과 휴대폰번호로 본인 확인 후 로그인됩니다.
           </p>
         </form>
+
+        <p className="mt-4 text-xs text-slate-400 text-center">
+          문의전화{" "}
+          <a href="tel:041-540-2667" className="text-slate-500 font-medium underline">
+            041-540-2667
+          </a>
+        </p>
       </div>
     </div>
   );
