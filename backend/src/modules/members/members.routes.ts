@@ -93,6 +93,28 @@ membersRouter.get("/:memberId/photo", async (req, res) => {
   return streamPhotoOrDefault(res, rows[0].photo_path);
 });
 
+// 등록된 사진만 삭제한다 (회원 자체는 그대로 두고 "사진 없음" 상태로 되돌림).
+membersRouter.delete("/:memberId/photo", async (req, res) => {
+  const parsed = memberIdSchema.safeParse(req.params.memberId);
+  if (!parsed.success) return res.status(400).json({ error: "회원번호 형식이 올바르지 않습니다." });
+
+  const { rows } = await pool.query(`SELECT photo_path FROM members WHERE member_id = $1`, [parsed.data]);
+  if (!rows[0]) return res.status(404).json({ error: "회원을 찾을 수 없습니다." });
+  if (!rows[0].photo_path) return res.json({ ok: true }); // 이미 사진이 없으면 그냥 성공 처리
+
+  await deletePhotoFile(rows[0].photo_path);
+  await pool.query(`UPDATE members SET photo_path = NULL WHERE member_id = $1`, [parsed.data]);
+  await recordAudit({
+    adminId: req.session.auth!.id,
+    memberId: parsed.data,
+    action: "photo_delete",
+    oldValue: { hadPhoto: true },
+    newValue: { hadPhoto: false },
+  });
+
+  res.json({ ok: true });
+});
+
 // 회원 상세/수정 화면에서 사진을 새로 등록하거나 교체한다.
 // multer 콜백 안의 async 함수는 express-async-errors가 잡아주는 "라우트 핸들러가 직접
 // 반환한 Promise"가 아니라서, try/catch 없이 두면 실패 시 응답을 아예 못 보내고 요청이

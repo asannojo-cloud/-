@@ -118,6 +118,27 @@ export default function MemberDetailPage() {
   const [loadingCandidates, setLoadingCandidates] = useState(false);
   const [applyingCandidateKey, setApplyingCandidateKey] = useState<string | null>(null);
 
+  const [confirmingPhotoDelete, setConfirmingPhotoDelete] = useState(false);
+  const [deletingPhoto, setDeletingPhoto] = useState(false);
+
+  async function handlePhotoDelete() {
+    if (!memberId) return;
+    setError(null);
+    setMessage(null);
+    setDeletingPhoto(true);
+    try {
+      await api.delete(`/admin/members/${memberId}/photo`);
+      setPhotoVersion((v) => v + 1);
+      setMessage("사진이 삭제되었습니다.");
+      setConfirmingPhotoDelete(false);
+      await load();
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : "사진 삭제 중 오류가 발생했습니다.");
+    } finally {
+      setDeletingPhoto(false);
+    }
+  }
+
   async function handlePhotoSelect(file: File | null) {
     if (!file || !memberId) return;
     setError(null);
@@ -249,6 +270,33 @@ export default function MemberDetailPage() {
           >
             {uploadingPhoto ? "업로드 중..." : detail.has_photo ? "사진 교체" : "사진 등록"}
           </button>
+
+          {detail.has_photo && !confirmingPhotoDelete && (
+            <button
+              type="button"
+              onClick={() => setConfirmingPhotoDelete(true)}
+              className="mt-1.5 w-full text-center text-xs text-red-500 underline py-0.5"
+            >
+              사진 삭제
+            </button>
+          )}
+          {detail.has_photo && confirmingPhotoDelete && (
+            <div className="mt-1.5 w-full flex items-center justify-center gap-2 text-xs">
+              <span className="text-slate-500">삭제할까요?</span>
+              <button
+                type="button"
+                onClick={handlePhotoDelete}
+                disabled={deletingPhoto}
+                className="text-red-600 font-medium underline disabled:opacity-50"
+              >
+                {deletingPhoto ? "삭제 중..." : "예"}
+              </button>
+              <button type="button" onClick={() => setConfirmingPhotoDelete(false)} className="text-slate-400 underline">
+                아니오
+              </button>
+            </div>
+          )}
+
           {/* textarea라 모든 브라우저가 예외 없이 편집 영역으로 인식해 우클릭 시 "붙여넣기"를
               띄워준다. 실제 텍스트 삽입은 onPaste에서 막고, 이미지 처리는
               usePasteImage(document 리스너)가 버블링을 통해 담당한다. */}
