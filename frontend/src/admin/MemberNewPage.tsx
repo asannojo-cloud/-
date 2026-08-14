@@ -222,16 +222,17 @@ export default function MemberNewPage() {
             {photo && <span className="text-xs text-slate-500 truncate max-w-[10rem]">{photo.name}</span>}
           </div>
 
-          {/* contentEditable이라 우클릭 시 브라우저가 "붙여넣기" 메뉴를 띄워준다.
-              실제 텍스트 삽입은 onPaste에서 막고, 이미지 처리는 usePasteImage(document 리스너)가 담당한다. */}
-          <div
-            contentEditable
-            suppressContentEditableWarning
+          {/* contentEditable div는 환경에 따라 우클릭해도 일반 페이지 메뉴만 뜨고 "붙여넣기"가
+              안 나오는 경우가 있어(2026-08-14 실제 확인), 모든 브라우저가 예외 없이 편집
+              영역으로 인식하는 실제 <textarea>로 바꿨다. */}
+          <textarea
+            value=""
+            onChange={() => {}}
             onPaste={(e) => e.preventDefault()}
-            className="mt-2 text-[11px] text-slate-400 border border-dashed border-slate-300 rounded-md px-2 py-1.5 cursor-text outline-none focus:border-blue-400 inline-block"
-          >
-            여기를 우클릭하거나 Ctrl+V로 이미지 붙여넣기
-          </div>
+            placeholder="여기를 우클릭하거나 Ctrl+V로 이미지 붙여넣기"
+            rows={2}
+            className="mt-2 w-full max-w-xs text-[11px] text-slate-400 border border-dashed border-slate-300 rounded-md px-2 py-1.5 cursor-text outline-none focus:border-blue-400 resize-none"
+          />
 
           {photoCandidates !== null && (
             <div className="mt-3 bg-slate-50 border border-slate-200 rounded-lg p-3">

@@ -223,30 +223,23 @@ export default function MemberDetailPage() {
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         <div className="bg-white rounded-xl shadow-sm p-5 flex flex-col items-center sm:max-w-none max-w-[10rem] mx-auto w-full">
-          {/* 사진 영역 자체도 contentEditable로 만들어 우클릭 "붙여넣기" 메뉴가 뜨도록 한다.
-              img은 contentEditable={false}로 빼서 리사이즈 핸들 등이 뜨지 않게 한다. */}
-          <div
-            contentEditable
-            suppressContentEditableWarning
+          {/* contentEditable div는 브라우저/환경에 따라 우클릭해도 일반 페이지 메뉴가 뜨고
+              "붙여넣기"가 안 나오는 경우가 있어(2026-08-14 실제 확인), 모든 브라우저가
+              예외 없이 편집 영역으로 인식하는 실제 <textarea>로 바꿨다. 사진은 배경 이미지로,
+              "사진 없음"은 placeholder로 보여줘서 겉보기엔 기존과 동일하게 보인다. */}
+          <textarea
+            value=""
+            onChange={() => {}}
             onPaste={(e) => e.preventDefault()}
-            className="w-32 aspect-[3/4] rounded-lg overflow-hidden bg-slate-100 border border-slate-200 outline-none cursor-copy focus:border-blue-400"
-          >
-            {detail.has_photo ? (
-              <img
-                key={photoVersion}
-                contentEditable={false}
-                src={`${photoUrl(`/admin/members/${detail.member_id}/photo`)}?v=${photoVersion}`}
-                className="w-full h-full object-cover pointer-events-none"
-              />
-            ) : (
-              // contentEditable={false}를 주지 않는다 — 주면 이 영역이 별도의 "편집 불가 섬"으로
-              // 취급되어, 사진이 없을 때 이 글자 위를 우클릭해도 브라우저가 "붙여넣기" 메뉴를
-              // 안 띄워주는 문제가 있었다(부모는 편집 가능해도 실제 클릭 지점은 이 자식이라).
-              <div className="w-full h-full flex items-center justify-center text-xs text-slate-400 pointer-events-none">
-                사진 없음
-              </div>
-            )}
-          </div>
+            readOnly={false}
+            placeholder={detail.has_photo ? "" : "사진 없음"}
+            className="w-32 aspect-[3/4] rounded-lg overflow-hidden bg-slate-100 bg-cover bg-center border border-slate-200 outline-none cursor-copy focus:border-blue-400 resize-none text-center text-xs text-transparent placeholder:text-slate-400 caret-transparent"
+            style={
+              detail.has_photo
+                ? { backgroundImage: `url(${photoUrl(`/admin/members/${detail.member_id}/photo`)}?v=${photoVersion})` }
+                : undefined
+            }
+          />
 
           <button
             type="button"
@@ -256,16 +249,17 @@ export default function MemberDetailPage() {
           >
             {uploadingPhoto ? "업로드 중..." : detail.has_photo ? "사진 교체" : "사진 등록"}
           </button>
-          {/* contentEditable이라 우클릭 시 브라우저가 "붙여넣기" 메뉴를 띄워준다.
-              실제 텍스트 삽입은 onPaste에서 막고, 이미지 처리는 usePasteImage(document 리스너)가 담당한다. */}
-          <div
-            contentEditable
-            suppressContentEditableWarning
+          {/* textarea라 모든 브라우저가 예외 없이 편집 영역으로 인식해 우클릭 시 "붙여넣기"를
+              띄워준다. 실제 텍스트 삽입은 onPaste에서 막고, 이미지 처리는
+              usePasteImage(document 리스너)가 버블링을 통해 담당한다. */}
+          <textarea
+            value=""
+            onChange={() => {}}
             onPaste={(e) => e.preventDefault()}
-            className="mt-1.5 text-[11px] text-slate-400 text-center border border-dashed border-slate-300 rounded-md px-2 py-1.5 cursor-text outline-none focus:border-blue-400"
-          >
-            여기를 우클릭하거나 Ctrl+V로 이미지 붙여넣기
-          </div>
+            placeholder="여기를 우클릭하거나 Ctrl+V로 이미지 붙여넣기"
+            rows={2}
+            className="mt-1.5 w-full text-[11px] text-slate-400 text-center border border-dashed border-slate-300 rounded-md px-2 py-1.5 cursor-text outline-none focus:border-blue-400 resize-none"
+          />
           <input
             ref={photoInputRef}
             type="file"
