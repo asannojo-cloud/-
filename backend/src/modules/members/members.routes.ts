@@ -288,6 +288,31 @@ membersRouter.put("/:memberId", async (req, res) => {
   res.json({ ok: true });
 });
 
+// 회원이 로그인 비밀번호(4자리)를 잊어버렸을 때 관리자가 초기화한다.
+// 초기화하면 must_reset_password가 다시 true가 되어, 다음 로그인 때 이름+휴대폰번호
+// 확인 후 새 비밀번호를 설정하는 화면으로 자동 전환된다.
+membersRouter.post("/:memberId/reset-pin", async (req, res) => {
+  const memberIdParsed = memberIdSchema.safeParse(req.params.memberId);
+  if (!memberIdParsed.success) return res.status(400).json({ error: "회원번호 형식이 올바르지 않습니다." });
+
+  const { rows } = await pool.query(`SELECT id FROM members WHERE member_id = $1`, [memberIdParsed.data]);
+  if (!rows[0]) return res.status(404).json({ error: "회원을 찾을 수 없습니다." });
+
+  await pool.query(
+    `UPDATE members
+     SET password_hash = NULL, password_set_at = NULL, must_reset_password = true,
+         failed_login_count = 0, locked_until = NULL
+     WHERE member_id = $1`,
+    [memberIdParsed.data]
+  );
+  await recordAudit({
+    adminId: req.session.auth!.id,
+    memberId: memberIdParsed.data,
+    action: "member_pin_reset",
+  });
+  res.json({ ok: true });
+});
+
 membersRouter.post("/:memberId/deactivate", async (req, res) => {
   const memberIdParsed = memberIdSchema.safeParse(req.params.memberId);
   if (!memberIdParsed.success) return res.status(400).json({ error: "회원번호 형식이 올바르지 않습니다." });

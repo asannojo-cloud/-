@@ -15,6 +15,7 @@ interface MemberDetail {
   created_at: string;
   updated_at: string;
   has_photo: boolean;
+  has_pin: boolean;
   lastChange: { action: string; created_at: string } | null;
 }
 
@@ -81,6 +82,19 @@ export default function MemberDetailPage() {
       await load();
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "처리 중 오류가 발생했습니다.");
+    }
+  }
+
+  async function handleResetPin() {
+    if (!memberId) return;
+    setError(null);
+    setMessage(null);
+    try {
+      await api.post(`/admin/members/${memberId}/reset-pin`);
+      setMessage("비밀번호가 초기화되었습니다. 다음 로그인 시 새로 설정하게 됩니다.");
+      await load();
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : "초기화 중 오류가 발생했습니다.");
     }
   }
 
@@ -316,6 +330,7 @@ export default function MemberDetailPage() {
               <InfoRow label="발급일" value={detail.issue_date} />
               <InfoRow label="등록일" value={new Date(detail.created_at).toLocaleString("ko-KR")} />
               <InfoRow label="수정일" value={new Date(detail.updated_at).toLocaleString("ko-KR")} />
+              <InfoRow label="로그인 비밀번호" value={detail.has_pin ? "설정됨" : "미설정 (다음 로그인 시 설정)"} />
               <button
                 onClick={() => setEditing(true)}
                 className="rounded-lg bg-blue-700 text-white text-sm font-medium px-4 py-2"
@@ -361,6 +376,11 @@ export default function MemberDetailPage() {
             <button onClick={handleToggleStatus} className="rounded-lg border border-slate-300 text-sm px-4 py-2">
               {detail.status === "active" ? "회원 비활성화" : "회원 재활성화"}
             </button>
+            {detail.has_pin && (
+              <button onClick={handleResetPin} className="rounded-lg border border-slate-300 text-sm px-4 py-2">
+                비밀번호 초기화
+              </button>
+            )}
             {detail.status === "inactive" && !confirmingDelete && (
               <button
                 onClick={() => setConfirmingDelete(true)}

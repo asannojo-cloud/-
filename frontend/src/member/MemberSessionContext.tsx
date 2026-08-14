@@ -1,10 +1,10 @@
 import { createContext, useContext, type ReactNode } from "react";
-import { useMemberSession, type MemberInfo } from "./useMemberSession";
+import { useMemberSession, type MemberInfo, type LoginPayload, type LoginResult } from "./useMemberSession";
 
 interface MemberSessionValue {
   member: MemberInfo | null;
   loading: boolean;
-  login: (name: string, phone: string) => Promise<void>;
+  login: (payload: LoginPayload) => Promise<LoginResult>;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
   photoNonce: number;

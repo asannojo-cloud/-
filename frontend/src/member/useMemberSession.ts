@@ -8,6 +8,20 @@ export interface MemberInfo {
   hasPhoto: boolean;
 }
 
+export interface LoginPayload {
+  name: string;
+  phone: string;
+  pin?: string; // 이미 설정된 비밀번호 확인용
+  newPin?: string; // 최초 설정/재설정용
+  newPinConfirm?: string;
+}
+
+export interface LoginResult {
+  ok: boolean;
+  needsPin?: boolean;
+  needsPinSetup?: boolean;
+}
+
 export function useMemberSession() {
   const [member, setMember] = useState<MemberInfo | null>(null);
   const [loading, setLoading] = useState(true);
@@ -33,9 +47,15 @@ export function useMemberSession() {
     refresh();
   }, [refresh]);
 
-  const login = useCallback(async (name: string, phone: string) => {
-    await api.post("/member/login", { name, phone });
-    await refresh();
+  // 이름+휴대폰번호(+비밀번호)로 로그인한다. 서버가 곧바로 로그인시키지 않고
+  // needsPin/needsPinSetup을 돌려줄 수 있어 결과를 그대로 반환한다 — 화면에서
+  // 그 값을 보고 비밀번호 입력/설정 단계로 넘어갈지 판단한다.
+  const login = useCallback(async (payload: LoginPayload): Promise<LoginResult> => {
+    const result = await api.post<LoginResult>("/member/login", payload);
+    if (result.ok) {
+      await refresh();
+    }
+    return result;
   }, [refresh]);
 
   const logout = useCallback(async () => {

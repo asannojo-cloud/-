@@ -61,7 +61,8 @@ export async function searchMembers(params: MemberSearchParams) {
 export async function getMemberDetail(memberId: string) {
   const { rows } = await pool.query(
     `SELECT member_id, name, birth_date, issue_date, status, phone, created_at, updated_at,
-            (photo_path IS NOT NULL) AS has_photo
+            (photo_path IS NOT NULL) AS has_photo,
+            (NOT must_reset_password AND password_hash IS NOT NULL) AS has_pin
      FROM members WHERE member_id = $1`,
     [memberId]
   );
