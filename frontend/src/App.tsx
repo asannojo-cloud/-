@@ -3,7 +3,6 @@ import { MemberSessionProvider } from "./member/MemberSessionContext";
 import MemberLoginPage from "./member/MemberLoginPage";
 import MemberLayout from "./member/MemberLayout";
 import MemberCardPage from "./member/MemberCardPage";
-import MemberPartnersPage from "./member/MemberPartnersPage";
 import MemberHelpPage from "./member/MemberHelpPage";
 import MemberMutualAidPage from "./member/MemberMutualAidPage";
 
@@ -32,7 +31,6 @@ export default function App() {
               <Route path="login" element={<MemberLoginPage />} />
               <Route element={<MemberLayout />}>
                 <Route path="card" element={<MemberCardPage />} />
-                <Route path="partners" element={<MemberPartnersPage />} />
                 <Route path="help" element={<MemberHelpPage />} />
                 <Route path="mutual-aid" element={<MemberMutualAidPage />} />
               </Route>

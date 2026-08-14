@@ -1,6 +1,10 @@
 // 로그인한 조합원에게만 안내하는 제휴/서비스 링크. 추가하려면 이 배열에 항목만 더하면 된다.
 const MEMBER_SERVICES = [
   {
+    label: "협약기관 검색",
+    url: "https://asan-union-partners.onrender.com/search",
+  },
+  {
     label: "아산시공무원노동조합 차량대여사업",
     url: "https://asanvehicle-fwznm5ba.manus.space/",
   },
@@ -9,33 +13,29 @@ const MEMBER_SERVICES = [
 export default function MemberHelpPage() {
   return (
     <div className="px-6 pt-8 max-w-sm mx-auto text-sm text-slate-600 leading-relaxed">
-      <h2 className="text-lg font-bold text-slate-900 mb-4">차량대여사업</h2>
+      <h2 className="text-lg font-bold text-slate-900 mb-4">협약기관 및 차량대여</h2>
 
-      {MEMBER_SERVICES.length > 0 && (
-        <>
-          <div className="space-y-2">
-            {MEMBER_SERVICES.map((service) => (
-              <a
-                key={service.url}
-                href={service.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-3 bg-white rounded-2xl shadow-sm p-5 active:bg-slate-50"
-              >
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-blue-700 shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H12a6 6 0 0 0 0 12h1.5M10.5 18H12a6 6 0 0 0 0-12h-1.5M8 12h8" />
-                  </svg>
-                </span>
-                <span className="flex-1 text-base font-semibold text-slate-900">{service.label}</span>
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4 text-slate-300 shrink-0">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 18l6-6-6-6" />
-                </svg>
-              </a>
-            ))}
-          </div>
-        </>
-      )}
+      <div className="space-y-2">
+        {MEMBER_SERVICES.map((service) => (
+          <a
+            key={service.url}
+            href={service.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-3 bg-white rounded-2xl shadow-sm p-5 active:bg-slate-50"
+          >
+            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-blue-700 shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H12a6 6 0 0 0 0 12h1.5M10.5 18H12a6 6 0 0 0 0-12h-1.5M8 12h8" />
+              </svg>
+            </span>
+            <span className="flex-1 text-base font-semibold text-slate-900">{service.label}</span>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4 text-slate-300 shrink-0">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 18l6-6-6-6" />
+            </svg>
+          </a>
+        ))}
+      </div>
 
       <h3 className="text-sm font-bold text-slate-700 mt-6 mb-2 px-1">문의</h3>
       <a
