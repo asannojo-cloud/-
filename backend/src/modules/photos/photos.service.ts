@@ -99,11 +99,17 @@ export async function processAndStorePhoto(src: string | Buffer, memberId: strin
   const safeMemberId = memberId.replace(/[^A-Za-z0-9_-]/g, "_");
   const fileName = `${safeMemberId}.webp`;
 
-  const buffer = await sharp(src)
-    .rotate() // EXIF 방향 정보 반영
-    .resize({ width: 1000, height: 1000, fit: "inside", withoutEnlargement: true })
-    .webp({ quality: 88 })
-    .toBuffer();
+  let buffer: Buffer;
+  try {
+    buffer = await sharp(src)
+      .rotate() // EXIF 방향 정보 반영
+      .resize({ width: 1000, height: 1000, fit: "inside", withoutEnlargement: true })
+      .webp({ quality: 88 })
+      .toBuffer();
+  } catch {
+    // sharp가 이미지를 못 읽는 경우(파일 손상 등) — 일반 500 대신 원인을 알 수 있는 메시지로 바꾼다.
+    throw new AppError(400, "사진 파일이 손상되었거나 지원하지 않는 형식이라 처리할 수 없습니다.");
+  }
 
   if (r2Configured) {
     await s3!.send(
