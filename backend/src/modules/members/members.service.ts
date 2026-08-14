@@ -40,11 +40,19 @@ export async function searchMembers(params: MemberSearchParams) {
   values.push(offset);
   const offsetIdx = values.length;
 
+  // member_id는 "2026-1", "2026-10", "2026-2"처럼 "연도-일련번호" 형태라 문자열로
+  // 그냥 정렬하면 "2026-10"이 "2026-2"보다 앞에 오는 등 순서가 뒤죽박죽으로 보인다
+  // (2026-08-14 회원관리 화면에서 순서가 이상하다는 지적으로 발견). 연도/일련번호를
+  // 숫자로 쪼개서 정렬하고, 그 형식이 아닌 회원번호는 맨 뒤로 보낸다.
   const { rows } = await pool.query(
     `SELECT member_id, name, status, issue_date, phone, (photo_path IS NOT NULL) AS has_photo
      FROM members
      ${where}
-     ORDER BY member_id
+     ORDER BY
+       (member_id ~ '^[0-9]+-[0-9]+$') DESC,
+       CASE WHEN member_id ~ '^[0-9]+-[0-9]+$' THEN split_part(member_id, '-', 1)::int END,
+       CASE WHEN member_id ~ '^[0-9]+-[0-9]+$' THEN split_part(member_id, '-', 2)::int END,
+       member_id
      LIMIT $${limitIdx} OFFSET $${offsetIdx}`,
     values
   );
