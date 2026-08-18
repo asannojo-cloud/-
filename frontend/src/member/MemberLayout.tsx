@@ -1,8 +1,21 @@
 import { NavLink, Outlet, Navigate, Link } from "react-router-dom";
 import { useMemberSessionContext } from "./MemberSessionContext";
 
+// 신분증/조합원증 아이콘 — 이모티콘은 기기/폰트에 따라 카드처럼 안 보일 수 있어
+// 직접 그린 아이콘으로 대체 (사진칸 + 정보줄이 있는 카드 모양).
+function IdCardIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
+      <rect x="3" y="5" width="18" height="14" rx="2" strokeLinejoin="round" />
+      <circle cx="8" cy="11.5" r="2" />
+      <path strokeLinecap="round" d="M5.5 16c.3-1.6 1.4-2.5 2.5-2.5s2.2.9 2.5 2.5" />
+      <path strokeLinecap="round" d="M13.5 10h4M13.5 13h4M13.5 16h2.5" />
+    </svg>
+  );
+}
+
 const tabs = [
-  { to: "/member/card", label: "조합원증", icon: "🪪" },
+  { to: "/member/card", label: "조합원증", icon: <IdCardIcon /> },
   { to: "/member/help", label: "조합원복지사업", icon: "🎁" },
   { to: "/member/mutual-aid", label: "상조서비스", icon: "🕊️" },
 ];
