@@ -148,6 +148,9 @@ export default function MemberMutualAidPage() {
 
         <div>
           <h3 className="text-sm font-bold text-slate-700 mb-2">지원 내용</h3>
+          <p className="mb-3 text-xs font-semibold text-red-500">
+            ※ 총무과에서 지원하는 아산시청 직원장례서비스는 신청하지 않으면 혜택이 없어지므로 우선 신청하시기 바랍니다.
+          </p>
           <div className="space-y-3">
             <div>
               <button
@@ -160,12 +163,36 @@ export default function MemberMutualAidPage() {
               </button>
               {cityServiceOpen && <CityFuneralServiceDetail />}
             </div>
-            <div>
-              <p className="font-medium text-slate-800">나. 아공노 상조지원서비스</p>
-              <p className="mt-1 pl-3 text-slate-600">1) 10만원 또는 상조물품 2박스 중 선택</p>
+            <div className="pt-3 border-t border-slate-100">
+              <p className="font-medium text-slate-800">나. 아공노 상조지원서비스 (택 1)</p>
+              <div className="mt-1.5 pl-3 space-y-2.5">
+                <div>
+                  <p className="text-slate-600">1) 상조물품 (150인분 종이컵, 나무젓가락, 세팅박스 등)</p>
+                  <img
+                    src="/mutual-aid/union-supplies.png"
+                    alt="아공노 상조물품 구성 (종이컵, 나무젓가락, 세팅박스 등)"
+                    className="mt-2 w-full rounded-lg border border-slate-200"
+                  />
+                </div>
+                <p className="text-slate-600">2) 10만원</p>
+              </div>
             </div>
-            <div>
-              <p className="font-medium text-slate-800">다. 조기 대여</p>
+            <div className="pt-3 border-t border-slate-100">
+              <p className="font-medium text-slate-800">다. 조기 대여 (공통 — 2가지 모두 지원)</p>
+              <div className="mt-1.5 pl-3 space-y-2.5">
+                <p className="text-slate-600">1) 아산시청</p>
+                <div>
+                  <p className="text-slate-600">2) 아산시공무원노동조합</p>
+                  <img
+                    src="/mutual-aid/mourning-flag.jpg"
+                    alt="아산시공무원노동조합 조기"
+                    className="mt-2 w-32 rounded-lg border border-slate-200 mx-auto block"
+                  />
+                </div>
+                <p className="text-[11px] text-slate-400">
+                  ※ 아산시 관내 장례식장인 경우, 장례식장에 비치되어 있으니 우선 해당 장례식장에 문의 바랍니다.
+                </p>
+              </div>
             </div>
           </div>
         </div>
