@@ -2,9 +2,9 @@ import { NavLink, Outlet, Navigate, Link } from "react-router-dom";
 import { useMemberSessionContext } from "./MemberSessionContext";
 
 const tabs = [
-  { to: "/member/card", label: "조합원증" },
-  { to: "/member/help", label: "조합원복지사업" },
-  { to: "/member/mutual-aid", label: "상조서비스" },
+  { to: "/member/card", label: "조합원증", icon: "🪪" },
+  { to: "/member/help", label: "조합원복지사업", icon: "🎁" },
+  { to: "/member/mutual-aid", label: "상조서비스", icon: "🕊️" },
 ];
 
 export default function MemberLayout() {
@@ -33,7 +33,7 @@ export default function MemberLayout() {
         </Link>
       </header>
 
-      <main className="flex-1 pb-16">
+      <main className="flex-1 pb-20">
         <Outlet />
       </main>
 
@@ -43,11 +43,12 @@ export default function MemberLayout() {
             key={tab.to}
             to={tab.to}
             className={({ isActive }) =>
-              `flex-1 text-center py-3 text-sm font-medium ${
+              `flex-1 flex flex-col items-center gap-0.5 py-2.5 text-xs font-bold tracking-tight ${
                 isActive ? "text-blue-700" : "text-slate-500"
               }`
             }
           >
+            <span className="text-xl leading-none">{tab.icon}</span>
             {tab.label}
           </NavLink>
         ))}
