@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
+import { useBackExitGuard } from "./shared/useBackExitGuard";
 import { MemberSessionProvider } from "./member/MemberSessionContext";
 import MemberLoginPage from "./member/MemberLoginPage";
 import MemberLayout from "./member/MemberLayout";
@@ -19,6 +20,8 @@ import AuditLogsPage from "./admin/AuditLogsPage";
 import PhotoBatchUploadPage from "./admin/PhotoBatchUploadPage";
 
 export default function App() {
+  useBackExitGuard();
+
   return (
     <Routes>
       <Route path="/" element={<Navigate to="/member/card" replace />} />
