@@ -1,4 +1,4 @@
-import { NavLink, Outlet, Navigate } from "react-router-dom";
+import { NavLink, Outlet, Navigate, Link } from "react-router-dom";
 import { useMemberSessionContext } from "./MemberSessionContext";
 
 const tabs = [
@@ -19,9 +19,18 @@ export default function MemberLayout() {
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
-      <header className="bg-blue-800 text-white py-3 font-semibold tracking-wide flex items-center justify-center gap-2">
+      <header className="relative bg-blue-800 text-white py-3 font-semibold tracking-wide flex items-center justify-center gap-2">
         <img src="/union-logo.png" alt="" className="h-8 w-8 object-contain" />
         <span>아산시공무원노동조합</span>
+        <Link
+          to="/member/card"
+          aria-label="홈으로 이동"
+          className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-full active:bg-blue-700"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3 10.5 12 3l9 7.5M5 9.5V21h14V9.5" />
+          </svg>
+        </Link>
       </header>
 
       <main className="flex-1 pb-16">
