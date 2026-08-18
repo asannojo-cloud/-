@@ -136,33 +136,28 @@ export default function MemberMutualAidPage() {
     <div className="px-6 pt-8 max-w-sm mx-auto text-sm text-slate-600 leading-relaxed">
       <h2 className="text-lg font-bold text-slate-900 mb-4">아산시청공무원상조서비스</h2>
 
-      <div className="bg-white rounded-2xl shadow-sm p-5 space-y-4">
-        <div>
-          <h3 className="inline-block rounded-md bg-slate-600 px-2.5 py-1 text-sm font-bold text-white mb-1.5">
-            지원대상
-          </h3>
-          <p>본인, 배우자, 자녀, 부모(배우자의 부모 포함)</p>
-        </div>
+      <div className="bg-white rounded-2xl shadow-sm p-5">
+        <h3 className="inline-block rounded-md bg-slate-600 px-2.5 py-1 text-sm font-bold text-white mb-1.5">
+          지원대상
+        </h3>
+        <p>본인, 배우자, 자녀, 부모(배우자의 부모 포함)</p>
+      </div>
 
-        <div>
-          <h3 className="inline-block rounded-md bg-slate-600 px-2.5 py-1 text-sm font-bold text-white mb-2">
-            지원 내용
-          </h3>
-          <p className="mb-3 text-xs font-semibold text-red-500">
-            ※ 총무과에서 지원하는 아산시청 직원장례서비스는 신청하지 않으면 혜택이 없어지므로 우선 신청하시기 바랍니다.
-          </p>
-          <div>
-            <button
-              type="button"
-              onClick={() => setCityServiceOpen((v) => !v)}
-              className="w-full flex items-center justify-between text-left"
-            >
-              <span className="font-medium text-slate-800">가. 아산시청 직원장례서비스</span>
-              <ChevronIcon open={cityServiceOpen} />
-            </button>
-            {cityServiceOpen && <CityFuneralServiceDetail />}
-          </div>
-        </div>
+      <p className="mt-4 px-1 text-xs font-semibold text-red-500">
+        ※ 총무과에서 지원하는 아산시청 직원장례서비스는 신청하지 않으면 혜택이 없어지므로 우선 신청하시기 바랍니다.
+      </p>
+
+      <h3 className="text-sm font-bold text-slate-700 mt-2 mb-2 px-1">가. 아산시청 직원장례서비스</h3>
+      <div className="bg-white rounded-2xl shadow-sm p-5">
+        <button
+          type="button"
+          onClick={() => setCityServiceOpen((v) => !v)}
+          className="w-full flex items-center justify-between text-left"
+        >
+          <span className="font-medium text-slate-800">신청 안내 및 지원 내용</span>
+          <ChevronIcon open={cityServiceOpen} />
+        </button>
+        {cityServiceOpen && <CityFuneralServiceDetail />}
       </div>
 
       <h3 className="text-sm font-bold text-slate-700 mt-6 mb-2 px-1">나. 아공노 상조지원서비스</h3>
@@ -197,7 +192,7 @@ export default function MemberMutualAidPage() {
           onClick={() => setFlagRentalOpen((v) => !v)}
           className="w-full flex items-center justify-between text-left"
         >
-          <span className="font-medium text-slate-800">아산시청 및 아공노 조기 모두 지원</span>
+          <span className="font-medium text-slate-800">아산시청 및 아공노 근조기 모두 지원</span>
           <ChevronIcon open={flagRentalOpen} />
         </button>
         {flagRentalOpen && (
