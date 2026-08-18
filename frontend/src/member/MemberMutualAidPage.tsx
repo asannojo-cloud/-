@@ -204,7 +204,7 @@ export default function MemberMutualAidPage() {
           <div className="mt-3 pt-3 border-t border-slate-100 space-y-2.5">
             <div>
               <p className="text-slate-600">1) 아산시청</p>
-              <p className="pl-3 text-slate-500">총무과 방문 수령 (대의원)</p>
+              <p className="pl-3 text-slate-500">총무과 방문 수령</p>
             </div>
             <div>
               <p className="text-slate-600">2) 아산시공무원노동조합</p>
