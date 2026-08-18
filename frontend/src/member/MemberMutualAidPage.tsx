@@ -195,14 +195,18 @@ export default function MemberMutualAidPage() {
           onClick={() => setFlagRentalOpen((v) => !v)}
           className="w-full flex items-center justify-between text-left"
         >
-          <span className="font-medium text-slate-800">공통 — 2가지 모두 지원</span>
+          <span className="font-medium text-slate-800">아산시청 및 아공노 조기 모두 지원</span>
           <ChevronIcon open={flagRentalOpen} />
         </button>
         {flagRentalOpen && (
           <div className="mt-3 pt-3 border-t border-slate-100 space-y-2.5">
-            <p className="text-slate-600">1) 아산시청</p>
+            <div>
+              <p className="text-slate-600">1) 아산시청</p>
+              <p className="pl-3 text-slate-500">총무과 방문 수령 (대의원)</p>
+            </div>
             <div>
               <p className="text-slate-600">2) 아산시공무원노동조합</p>
+              <p className="pl-3 text-slate-500">아공노 사무실 방문 수령 (대의원)</p>
               <img
                 src="/mutual-aid/mourning-flag.jpg"
                 alt="아산시공무원노동조합 조기"
