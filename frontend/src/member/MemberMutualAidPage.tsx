@@ -142,10 +142,6 @@ export default function MemberMutualAidPage() {
           <p>본인, 배우자, 자녀, 부모(배우자의 부모 포함)</p>
         </div>
 
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-700">
-          단, 단일 지원대상 장례에 지원대상자가 복수일 경우 중복 지원은 불가합니다.
-        </div>
-
         <div>
           <h3 className="text-sm font-bold text-slate-700 mb-2">지원 내용</h3>
           <p className="mb-3 text-xs font-semibold text-red-500">
