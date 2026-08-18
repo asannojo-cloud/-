@@ -1,24 +1,17 @@
-// 협약(계약서/승인) 아이콘 — 문서에 체크 표시.
+// 협약 아이콘 — 악수 이모티콘.
 function AgreementIcon() {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M6 4h8l4 4v11a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M14 4v4h4" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="m9 13 2 2 4-4" />
-    </svg>
-  );
+  return <span className="text-xl leading-none">🤝</span>;
 }
 
-// 승합차(카니발 등) 형태의 차량 아이콘.
+// 봉고차(캡오버 소형 트럭) 형태의 차량 아이콘.
 function VanIcon() {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M3 8a1 1 0 0 1 1-1h8l4.5 3.5H20a1 1 0 0 1 1 1V15a1 1 0 0 1-1 1h-1" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M3 8v7a1 1 0 0 0 1 1h1" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M3 12.5h13.5" />
-      <circle cx="8" cy="16" r="1.6" />
-      <circle cx="17" cy="16" r="1.6" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M9.6 16h5.8" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3 16v-5a1 1 0 0 1 1-1h1.8L9 6.5h9.5a1.5 1.5 0 0 1 1.5 1.5V16" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9 6.5V16" />
+      <circle cx="7" cy="17" r="1.6" />
+      <circle cx="17" cy="17" r="1.6" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M8.6 17h6.8" />
     </svg>
   );
 }
