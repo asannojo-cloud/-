@@ -134,7 +134,7 @@ export default function MemberMutualAidPage() {
 
   return (
     <div className="px-6 pt-8 max-w-sm mx-auto text-sm text-slate-600 leading-relaxed">
-      <h2 className="text-lg font-bold text-slate-900 mb-4">아산시청공무원상조서비스</h2>
+      <h2 className="text-lg font-bold text-slate-900 mb-4">아산시청 공무원 상조서비스</h2>
 
       <div className="bg-white rounded-2xl shadow-sm p-5">
         <h3 className="inline-block rounded-md bg-slate-600 px-2.5 py-1 text-sm font-bold text-white mb-1.5">
