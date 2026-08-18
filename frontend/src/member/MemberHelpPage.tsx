@@ -1,12 +1,39 @@
+// 협약(계약서/승인) 아이콘 — 문서에 체크 표시.
+function AgreementIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M6 4h8l4 4v11a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M14 4v4h4" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="m9 13 2 2 4-4" />
+    </svg>
+  );
+}
+
+// 승합차(카니발 등) 형태의 차량 아이콘.
+function VanIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3 8a1 1 0 0 1 1-1h8l4.5 3.5H20a1 1 0 0 1 1 1V15a1 1 0 0 1-1 1h-1" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3 8v7a1 1 0 0 0 1 1h1" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3 12.5h13.5" />
+      <circle cx="8" cy="16" r="1.6" />
+      <circle cx="17" cy="16" r="1.6" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9.6 16h5.8" />
+    </svg>
+  );
+}
+
 // 로그인한 조합원에게만 안내하는 제휴/서비스 링크. 추가하려면 이 배열에 항목만 더하면 된다.
 const MEMBER_SERVICES = [
   {
     label: "협약기관 검색",
     url: "https://asan-union-partners.onrender.com/search",
+    icon: <AgreementIcon />,
   },
   {
     label: "차량대여사업",
     url: "https://asanvehicle-fwznm5ba.manus.space/",
+    icon: <VanIcon />,
   },
 ];
 
@@ -25,9 +52,7 @@ export default function MemberHelpPage() {
             className="flex items-center gap-3 bg-white rounded-2xl shadow-sm p-5 active:bg-slate-50"
           >
             <span className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-blue-700 shrink-0">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H12a6 6 0 0 0 0 12h1.5M10.5 18H12a6 6 0 0 0 0-12h-1.5M8 12h8" />
-              </svg>
+              {service.icon}
             </span>
             <span className="flex-1 text-base font-semibold text-slate-900">{service.label}</span>
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4 text-slate-300 shrink-0">
