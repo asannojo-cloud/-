@@ -140,12 +140,16 @@ export default function MemberMutualAidPage() {
 
       <div className="bg-white rounded-2xl shadow-sm p-5 space-y-4">
         <div>
-          <h3 className="text-sm font-bold text-slate-700 mb-1.5">지원대상</h3>
+          <h3 className="inline-block rounded-md bg-slate-600 px-2.5 py-1 text-sm font-bold text-white mb-1.5">
+            지원대상
+          </h3>
           <p>본인, 배우자, 자녀, 부모(배우자의 부모 포함)</p>
         </div>
 
         <div>
-          <h3 className="text-sm font-bold text-slate-700 mb-2">지원 내용</h3>
+          <h3 className="inline-block rounded-md bg-slate-600 px-2.5 py-1 text-sm font-bold text-white mb-2">
+            지원 내용
+          </h3>
           <p className="mb-3 text-xs font-semibold text-red-500">
             ※ 총무과에서 지원하는 아산시청 직원장례서비스는 신청하지 않으면 혜택이 없어지므로 우선 신청하시기 바랍니다.
           </p>
