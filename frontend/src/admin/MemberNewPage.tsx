@@ -5,12 +5,22 @@ import DateInput from "../shared/DateInput";
 import { pickPhotoFromUnmatchedFolder } from "../shared/unmatchedFolder";
 import { usePasteImage } from "../shared/usePasteImage";
 
+// 로컬 타임존 기준 "YYYY-MM-DD" (toISOString은 UTC라 자정 근처에 날짜가 하루 밀릴 수 있음).
+function todayLocalDate(): string {
+  const d = new Date();
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
 export default function MemberNewPage() {
   const navigate = useNavigate();
   const [memberId, setMemberId] = useState("");
   const [name, setName] = useState("");
   const [birthDate, setBirthDate] = useState("");
-  const [issueDate, setIssueDate] = useState("");
+  // 등록일(발급일)을 따로 입력하지 않으면 오늘 날짜가 자동으로 들어가도록 기본값을 채워둔다.
+  const [issueDate, setIssueDate] = useState(todayLocalDate());
   const [phone, setPhone] = useState("");
   const [photo, setPhoto] = useState<File | null>(null);
   const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null);
