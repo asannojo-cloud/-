@@ -45,8 +45,6 @@ const ALT_SERVICE_GROUPS = [
 function CityFuneralServiceDetail() {
   return (
     <div className="mt-3 pt-3 border-t border-slate-100 space-y-4 text-xs">
-      <p className="text-center font-bold text-slate-800 text-sm">2026년 아산시 직원 장례서비스 지원사업 운영 안내</p>
-
       <div className="space-y-2">
         <InfoLine label="대상" value="아산시 소속 직원 (공무원, 공무직, 시의원, 실무수습, 청원경찰, 1년 이상 기간제, 공중보건의, 시립합창단원 등)" />
         <InfoLine label="기간" value="2026.1.1. ~ 2026.12.31." />
