@@ -175,7 +175,7 @@ export default function MemberMutualAidPage() {
         {supplyServiceOpen && (
           <div className="mt-3 pt-3 border-t border-slate-100 space-y-2.5">
             <div>
-              <p className="text-slate-600">1) 상조물품 (150인분 종이컵, 나무젓가락, 세팅박스 등)</p>
+              <p className="text-slate-600">1) 상조물품 (150인분 * 2박스)</p>
               <img
                 src="/mutual-aid/union-supplies.png"
                 alt="아공노 상조물품 구성 (종이컵, 나무젓가락, 세팅박스 등)"
