@@ -190,7 +190,7 @@ export default function MemberMutualAidPage() {
         )}
       </div>
 
-      <h3 className="text-sm font-bold text-slate-700 mt-6 mb-2 px-1">공통지원 서비스</h3>
+      <h3 className="text-sm font-bold text-slate-700 mt-6 mb-2 px-1">다. 공통지원서비스 (근조기)</h3>
       <div className="bg-white rounded-2xl shadow-sm p-5">
         <button
           type="button"
