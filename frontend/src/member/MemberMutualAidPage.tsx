@@ -132,6 +132,7 @@ function InfoLine({ label, value }: { label: string; value: string }) {
 export default function MemberMutualAidPage() {
   const [cityServiceOpen, setCityServiceOpen] = useState(false);
   const [supplyServiceOpen, setSupplyServiceOpen] = useState(false);
+  const [flagRentalOpen, setFlagRentalOpen] = useState(false);
 
   return (
     <div className="px-6 pt-8 max-w-sm mx-auto text-sm text-slate-600 leading-relaxed">
@@ -189,21 +190,30 @@ export default function MemberMutualAidPage() {
 
       <h3 className="text-sm font-bold text-slate-700 mt-6 mb-2 px-1">다. 조기 대여</h3>
       <div className="bg-white rounded-2xl shadow-sm p-5">
-        <p className="font-medium text-slate-800">공통 — 2가지 모두 지원</p>
-        <div className="mt-1.5 pl-3 space-y-2.5">
-          <p className="text-slate-600">1) 아산시청</p>
-          <div>
-            <p className="text-slate-600">2) 아산시공무원노동조합</p>
-            <img
-              src="/mutual-aid/mourning-flag.jpg"
-              alt="아산시공무원노동조합 조기"
-              className="mt-2 w-32 rounded-lg border border-slate-200 mx-auto block"
-            />
+        <button
+          type="button"
+          onClick={() => setFlagRentalOpen((v) => !v)}
+          className="w-full flex items-center justify-between text-left"
+        >
+          <span className="font-medium text-slate-800">공통 — 2가지 모두 지원</span>
+          <ChevronIcon open={flagRentalOpen} />
+        </button>
+        {flagRentalOpen && (
+          <div className="mt-3 pt-3 border-t border-slate-100 space-y-2.5">
+            <p className="text-slate-600">1) 아산시청</p>
+            <div>
+              <p className="text-slate-600">2) 아산시공무원노동조합</p>
+              <img
+                src="/mutual-aid/mourning-flag.jpg"
+                alt="아산시공무원노동조합 조기"
+                className="mt-2 w-32 rounded-lg border border-slate-200 mx-auto block"
+              />
+            </div>
+            <p className="text-[11px] text-slate-400">
+              ※ 아산시 관내 장례식장인 경우, 장례식장에 비치되어 있으니 우선 해당 장례식장에 문의 바랍니다.
+            </p>
           </div>
-          <p className="text-[11px] text-slate-400">
-            ※ 아산시 관내 장례식장인 경우, 장례식장에 비치되어 있으니 우선 해당 장례식장에 문의 바랍니다.
-          </p>
-        </div>
+        )}
       </div>
 
       <h3 className="text-sm font-bold text-slate-700 mt-6 mb-2 px-1">문의</h3>
