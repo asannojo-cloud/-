@@ -143,83 +143,85 @@ export default function MemberMutualAidPage() {
         <p>본인, 배우자, 자녀, 부모(배우자의 부모 포함)</p>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm p-5 mt-4">
-        <h3 className="inline-block rounded-md bg-slate-600 px-2.5 py-1 text-sm font-bold text-white mb-1.5">
-          지원 내용
-        </h3>
-        <p className="text-xs font-semibold text-red-500">
-          ※ 총무과에서 지원하는 아산시청 직원장례서비스는 신청하지 않으면 혜택이 없어지므로 우선 신청하시기 바랍니다.
-        </p>
-      </div>
+      <div className="bg-white rounded-2xl shadow-sm p-5 mt-4 space-y-4">
+        <div>
+          <h3 className="inline-block rounded-md bg-slate-600 px-2.5 py-1 text-sm font-bold text-white mb-1.5">
+            지원 내용
+          </h3>
+          <p className="text-xs font-semibold text-red-500">
+            ※ 총무과에서 지원하는 아산시청 직원장례서비스는 신청하지 않으면 혜택이 없어지므로 우선 신청하시기 바랍니다.
+          </p>
+        </div>
 
-      <h3 className="text-sm font-bold text-slate-700 mt-2 mb-2 px-1">가. 아산시청 직원장례서비스</h3>
-      <div className="bg-white rounded-2xl shadow-sm p-5">
-        <button
-          type="button"
-          onClick={() => setCityServiceOpen((v) => !v)}
-          className="w-full flex items-center justify-between text-left"
-        >
-          <span className="font-medium text-slate-800">신청 안내 및 지원 내용</span>
-          <ChevronIcon open={cityServiceOpen} />
-        </button>
-        {cityServiceOpen && <CityFuneralServiceDetail />}
-      </div>
+        <div className="pt-4 border-t border-slate-100">
+          <p className="font-medium text-slate-800 mb-1.5">가. 아산시청 직원장례서비스</p>
+          <button
+            type="button"
+            onClick={() => setCityServiceOpen((v) => !v)}
+            className="w-full flex items-center justify-between text-left rounded-lg bg-slate-50 border border-slate-100 px-3 py-2.5"
+          >
+            <span className="font-medium text-slate-800">신청 안내 및 지원 내용</span>
+            <ChevronIcon open={cityServiceOpen} />
+          </button>
+          {cityServiceOpen && <CityFuneralServiceDetail />}
+        </div>
 
-      <h3 className="text-sm font-bold text-slate-700 mt-6 mb-2 px-1">나. 아공노 상조지원서비스</h3>
-      <div className="bg-white rounded-2xl shadow-sm p-5">
-        <button
-          type="button"
-          onClick={() => setSupplyServiceOpen((v) => !v)}
-          className="w-full flex items-center justify-between text-left"
-        >
-          <span className="font-medium text-slate-800">상조물품 또는 10만원 (택 1)</span>
-          <ChevronIcon open={supplyServiceOpen} />
-        </button>
-        {supplyServiceOpen && (
-          <div className="mt-3 pt-3 border-t border-slate-100 space-y-2.5">
-            <div>
-              <p className="text-slate-600">1) 상조물품 (150인분 * 2박스)</p>
-              <img
-                src="/mutual-aid/union-supplies.png"
-                alt="아공노 상조물품 구성 (종이컵, 나무젓가락, 세팅박스 등)"
-                className="mt-2 w-full rounded-lg border border-slate-200"
-              />
+        <div className="pt-4 border-t border-slate-100">
+          <p className="font-medium text-slate-800 mb-1.5">나. 아공노 상조지원서비스</p>
+          <button
+            type="button"
+            onClick={() => setSupplyServiceOpen((v) => !v)}
+            className="w-full flex items-center justify-between text-left rounded-lg bg-slate-50 border border-slate-100 px-3 py-2.5"
+          >
+            <span className="font-medium text-slate-800">상조물품 또는 10만원 (택 1)</span>
+            <ChevronIcon open={supplyServiceOpen} />
+          </button>
+          {supplyServiceOpen && (
+            <div className="mt-3 pt-3 border-t border-slate-100 space-y-2.5">
+              <div>
+                <p className="text-slate-600">1) 상조물품 (150인분 * 2박스)</p>
+                <img
+                  src="/mutual-aid/union-supplies.png"
+                  alt="아공노 상조물품 구성 (종이컵, 나무젓가락, 세팅박스 등)"
+                  className="mt-2 w-full rounded-lg border border-slate-200"
+                />
+              </div>
+              <p className="text-slate-600">2) 10만원</p>
             </div>
-            <p className="text-slate-600">2) 10만원</p>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
 
-      <h3 className="text-sm font-bold text-slate-700 mt-6 mb-2 px-1">다. 공통지원서비스 (근조기)</h3>
-      <div className="bg-white rounded-2xl shadow-sm p-5">
-        <button
-          type="button"
-          onClick={() => setFlagRentalOpen((v) => !v)}
-          className="w-full flex items-center justify-between text-left"
-        >
-          <span className="font-medium text-slate-800">아산시청 및 아공노 근조기 모두 지원</span>
-          <ChevronIcon open={flagRentalOpen} />
-        </button>
-        {flagRentalOpen && (
-          <div className="mt-3 pt-3 border-t border-slate-100 space-y-2.5">
-            <div>
-              <p className="text-slate-600">1) 아산시청</p>
-              <p className="pl-3 text-slate-500">총무과 방문 수령</p>
+        <div className="pt-4 border-t border-slate-100">
+          <p className="font-medium text-slate-800 mb-1.5">다. 공통지원서비스 (근조기)</p>
+          <button
+            type="button"
+            onClick={() => setFlagRentalOpen((v) => !v)}
+            className="w-full flex items-center justify-between text-left rounded-lg bg-slate-50 border border-slate-100 px-3 py-2.5"
+          >
+            <span className="font-medium text-slate-800">아산시청 및 아공노 근조기 모두 지원</span>
+            <ChevronIcon open={flagRentalOpen} />
+          </button>
+          {flagRentalOpen && (
+            <div className="mt-3 pt-3 border-t border-slate-100 space-y-2.5">
+              <div>
+                <p className="text-slate-600">1) 아산시청</p>
+                <p className="pl-3 text-slate-500">총무과 방문 수령</p>
+              </div>
+              <div>
+                <p className="text-slate-600">2) 아산시공무원노동조합</p>
+                <p className="pl-3 text-slate-500">아공노 사무실 방문 수령 (대의원)</p>
+                <img
+                  src="/mutual-aid/mourning-flag.jpg"
+                  alt="아산시공무원노동조합 조기"
+                  className="mt-2 w-32 rounded-lg border border-slate-200 mx-auto block"
+                />
+              </div>
+              <p className="text-[11px] text-slate-400">
+                ※ 아산시 관내 장례식장인 경우, 장례식장에 비치되어 있으니 우선 해당 장례식장에 문의 바랍니다.
+              </p>
             </div>
-            <div>
-              <p className="text-slate-600">2) 아산시공무원노동조합</p>
-              <p className="pl-3 text-slate-500">아공노 사무실 방문 수령 (대의원)</p>
-              <img
-                src="/mutual-aid/mourning-flag.jpg"
-                alt="아산시공무원노동조합 조기"
-                className="mt-2 w-32 rounded-lg border border-slate-200 mx-auto block"
-              />
-            </div>
-            <p className="text-[11px] text-slate-400">
-              ※ 아산시 관내 장례식장인 경우, 장례식장에 비치되어 있으니 우선 해당 장례식장에 문의 바랍니다.
-            </p>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       <h3 className="text-sm font-bold text-slate-700 mt-6 mb-2 px-1">문의</h3>
