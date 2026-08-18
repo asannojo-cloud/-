@@ -170,7 +170,7 @@ export default function MemberMutualAidPage() {
           onClick={() => setSupplyServiceOpen((v) => !v)}
           className="w-full flex items-center justify-between text-left"
         >
-          <span className="font-medium text-slate-800">택 1</span>
+          <span className="font-medium text-slate-800">상조물품 또는 10만원 (택 1)</span>
           <ChevronIcon open={supplyServiceOpen} />
         </button>
         {supplyServiceOpen && (
