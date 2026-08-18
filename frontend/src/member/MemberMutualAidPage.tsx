@@ -143,12 +143,14 @@ export default function MemberMutualAidPage() {
         <p>본인, 배우자, 자녀, 부모(배우자의 부모 포함)</p>
       </div>
 
-      <h3 className="inline-block rounded-md bg-slate-600 px-2.5 py-1 text-sm font-bold text-white mt-4 mb-1.5 mx-1">
-        지원 내용
-      </h3>
-      <p className="px-1 text-xs font-semibold text-red-500">
-        ※ 총무과에서 지원하는 아산시청 직원장례서비스는 신청하지 않으면 혜택이 없어지므로 우선 신청하시기 바랍니다.
-      </p>
+      <div className="bg-white rounded-2xl shadow-sm p-5 mt-4">
+        <h3 className="inline-block rounded-md bg-slate-600 px-2.5 py-1 text-sm font-bold text-white mb-1.5">
+          지원 내용
+        </h3>
+        <p className="text-xs font-semibold text-red-500">
+          ※ 총무과에서 지원하는 아산시청 직원장례서비스는 신청하지 않으면 혜택이 없어지므로 우선 신청하시기 바랍니다.
+        </p>
+      </div>
 
       <h3 className="text-sm font-bold text-slate-700 mt-2 mb-2 px-1">가. 아산시청 직원장례서비스</h3>
       <div className="bg-white rounded-2xl shadow-sm p-5">
