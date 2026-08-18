@@ -20,7 +20,7 @@ function VanIcon() {
 const MEMBER_SERVICES = [
   {
     label: "협약기관 검색",
-    url: "https://asan-union-partners.onrender.com/search",
+    url: "https://asan-union-partners.onrender.com",
     icon: <AgreementIcon />,
   },
   {
