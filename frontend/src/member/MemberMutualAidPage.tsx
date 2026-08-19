@@ -241,7 +241,7 @@ export default function MemberMutualAidPage() {
           </span>
         </a>
         <a
-          href="tel:041-540-5225"
+          href="tel:041-540-2225"
           className="flex items-center gap-3 bg-white rounded-2xl shadow-sm p-5 active:bg-slate-50"
         >
           <span className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-blue-700 shrink-0">
@@ -251,7 +251,7 @@ export default function MemberMutualAidPage() {
           </span>
           <span>
             <span className="block text-xs text-slate-400">총무과 문의전화</span>
-            <span className="block text-base font-semibold text-slate-900">041-540-5225</span>
+            <span className="block text-base font-semibold text-slate-900">041-540-2225</span>
           </span>
         </a>
       </div>
